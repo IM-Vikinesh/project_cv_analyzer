@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+frontend/.env
+
+# Firebase service account
+backend/serviceAccountKey.json
+serviceAccountKey.json
+*.key
+
+# Build outputs
+frontend/build/
+
+# Uploaded files
+uploads/
+backend/uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Legacy
+project cv analayzer/
