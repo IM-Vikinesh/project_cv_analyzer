@@ -43,18 +43,6 @@ def create_app():
             'storage': 'Firebase Storage'
         }), 200
     
-    @app.route('/', methods=['GET'])
-    def root():
-        return jsonify({
-            'message': 'Welcome to JobNex AI API',
-            'endpoints': {
-                'health': '/api/health',
-                'auth': '/api/auth/*',
-                'jobs': '/api/jobs/*',
-                'applications': '/api/applications/*',
-                'ai': '/api/ai/*'
-            }
-        }), 200
     
     return app
 
