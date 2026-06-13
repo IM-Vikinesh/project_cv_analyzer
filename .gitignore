@@ -6,6 +6,8 @@ frontend/node_modules/
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.corrupted
 *.so
 *.egg-info/
 dist/
