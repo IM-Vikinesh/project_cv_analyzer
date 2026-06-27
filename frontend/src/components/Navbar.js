@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,6 +10,9 @@ const Navbar = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const isHome = location.pathname === '/';
+  const mobileMenuRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const hamburgerRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -21,6 +24,19 @@ const Navbar = () => {
     setShowUserMenu(false);
     setIsOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (isOpen && mobileMenuRef.current && !mobileMenuRef.current.contains(e.target) && !hamburgerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+      if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, showUserMenu]);
 
   const handleLogout = async () => {
     await logout();
@@ -117,7 +133,7 @@ const Navbar = () => {
                 </button>
 
                 {showUserMenu && (
-                  <div className={`absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border ${borderColor}`}>
+                  <div ref={userMenuRef} className={`absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border ${borderColor}`}>
                     <Link
                       to="/profile"
                       className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors"
@@ -170,6 +186,7 @@ const Navbar = () => {
             )}
 
             <button
+              ref={hamburgerRef}
               onClick={() => setIsOpen(!isOpen)}
               className={`lg:hidden ml-3 p-2.5 rounded-xl transition-colors ${
                 isHome && !scrolled ? 'text-white hover:bg-white/10' : 'text-gray-400 hover:bg-gray-100'
@@ -188,7 +205,7 @@ const Navbar = () => {
       </div>
 
       {isOpen && (
-        <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-xl">
+        <div ref={mobileMenuRef} className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-xl">
           {user && (
             <div className="px-4 pt-3 pb-2 border-b border-gray-100">
               <div className="flex items-center space-x-3">
