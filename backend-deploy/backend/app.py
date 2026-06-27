@@ -17,7 +17,7 @@ from utils.firebase_config import init_firebase
 def create_app():
     app = Flask(__name__)
     
-    allowed_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+    allowed_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,https://job-nex-ai.vercel.app').split(',')
     CORS(app, origins=allowed_origins, allow_headers=["Content-Type", "X-User-Id"], supports_credentials=True, methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
