@@ -1,7 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+
+const InputGroup = ({ type, value, onChange, icon, label, name, focused, setFocused }) => {
+  const isActive = focused === name || value;
+  return (
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <svg className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-primary-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {icon}
+        </svg>
+      </div>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(name)}
+        onBlur={() => setFocused(null)}
+        className="w-full pl-11 pr-4 pt-5 pb-2 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-primary-500 focus:bg-white transition-all duration-200 placeholder-transparent"
+        placeholder={label}
+        required
+      />
+      <label className={`absolute left-11 transition-all duration-200 pointer-events-none ${
+        isActive ? 'top-2 text-xs text-primary-500' : 'top-3.5 text-sm text-gray-400'
+      }`}>
+        {label}
+      </label>
+    </div>
+  );
+};
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +40,6 @@ const Login = () => {
   const [focused, setFocused] = useState(null);
   const { login, googleLogin, user } = useAuth();
   const navigate = useNavigate();
-  const cardRef = useRef(null);
 
   useEffect(() => {
     if (user) { navigate('/dashboard', { replace: true }); }
@@ -42,34 +69,6 @@ const Login = () => {
     } finally { setGoogleLoading(false); }
   };
 
-  const InputGroup = ({ type, value, onChange, icon, label, name, focused, setFocused }) => {
-    const isActive = focused === name || value;
-    return (
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <svg className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-primary-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {icon}
-          </svg>
-        </div>
-        <input
-          type={type}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setFocused(name)}
-          onBlur={() => setFocused(null)}
-          className="w-full pl-11 pr-4 pt-5 pb-2 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-primary-500 focus:bg-white transition-all duration-200 placeholder-transparent"
-          placeholder={label}
-          required
-        />
-        <label className={`absolute left-11 transition-all duration-200 pointer-events-none ${
-          isActive ? 'top-2 text-xs text-primary-500' : 'top-3.5 text-sm text-gray-400'
-        }`}>
-          {label}
-        </label>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-5rem)] bg-gradient-to-br from-gray-50 via-primary-50/30 to-secondary-50/30 flex items-center justify-center py-8 px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMwZTk0ZTkiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
@@ -85,7 +84,7 @@ const Login = () => {
           </Link>
         </div>
 
-        <div ref={cardRef} className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-primary-100/50 border border-white/50 p-8 sm:p-10">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-primary-100/50 border border-white/50 p-8 sm:p-10">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
             <p className="text-gray-500">Sign in to continue your career journey</p>
@@ -129,7 +128,6 @@ const Login = () => {
               focused={focused}
               setFocused={setFocused}
             />
-
             <InputGroup
               type="password"
               value={password}

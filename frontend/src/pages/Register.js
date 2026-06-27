@@ -3,6 +3,35 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
+const InputGroup = ({ type, value, onChange, icon, label, name, focused, setFocused }) => {
+  const isActive = focused === name || value;
+  return (
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <svg className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-primary-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {icon}
+        </svg>
+      </div>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(name)}
+        onBlur={() => setFocused(null)}
+        className="w-full pl-11 pr-4 pt-5 pb-2 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-primary-500 focus:bg-white transition-all duration-200 placeholder-transparent"
+        placeholder={label}
+        required
+      />
+      <label className={`absolute left-11 transition-all duration-200 pointer-events-none ${
+        isActive ? 'top-2 text-xs text-primary-500' : 'top-3.5 text-sm text-gray-400'
+      }`}>
+        {label}
+      </label>
+    </div>
+  );
+};
+
 const Register = () => {
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', confirmPassword: '', role: 'job_seeker',
@@ -44,35 +73,6 @@ const Register = () => {
     } catch (error) {
       toast.error(error.message || 'Google sign-up failed');
     } finally { setGoogleLoading(false); }
-  };
-
-  const InputGroup = ({ type, value, onChange, icon, label, name }) => {
-    const isActive = focused === name || value;
-    return (
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <svg className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-primary-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {icon}
-          </svg>
-        </div>
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setFocused(name)}
-          onBlur={() => setFocused(null)}
-          className="w-full pl-11 pr-4 pt-5 pb-2 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-primary-500 focus:bg-white transition-all duration-200 placeholder-transparent"
-          placeholder={label}
-          required
-        />
-        <label className={`absolute left-11 transition-all duration-200 pointer-events-none ${
-          isActive ? 'top-2 text-xs text-primary-500' : 'top-3.5 text-sm text-gray-400'
-        }`}>
-          {label}
-        </label>
-      </div>
-    );
   };
 
   return (
@@ -157,6 +157,8 @@ const Register = () => {
               icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />}
               label="Full Name"
               name="name"
+              focused={focused}
+              setFocused={setFocused}
             />
             <InputGroup
               type="email"
@@ -165,6 +167,8 @@ const Register = () => {
               icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />}
               label="Email Address"
               name="email"
+              focused={focused}
+              setFocused={setFocused}
             />
             <InputGroup
               type="password"
@@ -173,6 +177,8 @@ const Register = () => {
               icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />}
               label="Password"
               name="password"
+              focused={focused}
+              setFocused={setFocused}
             />
             <InputGroup
               type="password"
@@ -181,6 +187,8 @@ const Register = () => {
               icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm4-10V7a4 4 0 00-8 0v4" />}
               label="Confirm Password"
               name="confirmPassword"
+              focused={focused}
+              setFocused={setFocused}
             />
             <button type="submit" disabled={loading} className="w-full py-3.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-2xl font-semibold hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-primary-200 flex items-center justify-center group">
               {loading ? (
