@@ -59,3 +59,4 @@ yarn-error.log*
 project cv analayzer/
 
 .vercel
+.env*
