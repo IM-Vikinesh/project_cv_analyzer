@@ -44,7 +44,7 @@ const BlogDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link to="/blogs" className="text-primary-600 hover:text-primary-700 inline-flex items-center mb-8">
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,16 +53,16 @@ const BlogDetails = () => {
           Back to Articles
         </Link>
 
-        <article className="card p-8">
+        <article className="card p-4 sm:p-8">
           {blog.image_url && (
             <img
               src={blog.image_url}
               alt={blog.title}
-              className="w-full h-64 object-cover rounded-lg mb-8"
+              className="w-full h-48 sm:h-64 object-cover rounded-lg mb-8"
             />
           )}
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{blog.title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{blog.title}</h1>
           
           <div className="text-sm text-gray-500 mb-8">
             Published on {new Date(blog.created_at).toLocaleDateString()}

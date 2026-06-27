@@ -186,7 +186,7 @@ const AIInterview = () => {
 
   if (step === 'setup') {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -194,10 +194,10 @@ const AIInterview = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">AI Mock Interview</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Mock Interview</h1>
             <p className="text-gray-500 mt-2">Practice with AI-generated questions in a natural conversation</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-8">
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Job Title *</label>
@@ -285,7 +285,7 @@ const AIInterview = () => {
 
       {step === 'interview' && !result && (
         <div className="bg-white border-t border-gray-100 px-4 py-4 shadow-lg">
-          <div className="max-w-3xl mx-auto flex gap-3">
+          <div className="max-w-3xl mx-auto flex gap-2 sm:gap-3">
             <input
               ref={inputRef}
               type="text"
@@ -316,7 +316,7 @@ const AIInterview = () => {
 
       {step === 'results' && (
         <div className="bg-white border-t border-gray-100 px-4 py-4">
-          <div className="max-w-3xl mx-auto flex gap-3">
+          <div className="max-w-3xl mx-auto flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button onClick={resetAll} className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors font-medium text-center">
               Try Another Interview
             </button>

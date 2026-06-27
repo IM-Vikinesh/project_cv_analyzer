@@ -154,13 +154,13 @@ const Home = () => {
         </div>
       </header>
 
-      <section className="py-16 bg-white">
+      <section className="py-10 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">Powerful AI Features</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Powerful AI Features</h2>
             <p className="text-gray-600 mt-4">Everything you need to supercharge your job search</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {features.map((feature, index) => (
               <div key={index} className="p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow">
                 <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 mb-4">
@@ -174,10 +174,10 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-10 sm:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">Latest Opportunities</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Latest Opportunities</h2>
             <p className="text-gray-600 mt-4">Discover trending jobs from top companies</p>
           </div>
           
@@ -228,10 +228,10 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="py-16 bg-white">
+      <section className="py-10 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">Latest Articles</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Latest Articles</h2>
             <p className="text-gray-600 mt-4">Insights and tips for your career growth</p>
           </div>
           
@@ -281,9 +281,9 @@ const Home = () => {
       </section>
 
       {!user && (
-        <section className="py-16 bg-primary-600 text-white">
+        <section className="py-10 sm:py-16 bg-primary-600 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Career?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Transform Your Career?</h2>
             <p className="text-primary-100 mb-8 max-w-2xl mx-auto">
               Join thousands of job seekers who've accelerated their careers with JobNex AI
             </p>
@@ -299,7 +299,7 @@ const Home = () => {
 
       <footer className="bg-gray-900 text-gray-400 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-lg flex items-center justify-center">

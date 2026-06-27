@@ -46,7 +46,7 @@ const Login = () => {
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Welcome Back</h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">

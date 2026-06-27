@@ -144,7 +144,7 @@ const CVBuilder = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">CV Builder</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CV Builder</h1>
           <p className="text-gray-600 mt-1">Create a professional resume in minutes</p>
         </div>
 
@@ -152,7 +152,7 @@ const CVBuilder = () => {
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Fill Your Information</h2>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={saveToCloud}
                   disabled={savingToCloud}
@@ -187,7 +187,7 @@ const CVBuilder = () => {
             <div className="space-y-6">
               <div>
                 <h3 className="font-medium text-gray-900 mb-4">Personal Information</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Full Name</label>
                     <input
@@ -215,7 +215,7 @@ const CVBuilder = () => {
                       value={cvData.phone}
                       onChange={(e) => handleChange('phone', e.target.value)}
                       className="input-field"
-                      placeholder="+1 234 567 890"
+                      placeholder="+94 77 123 4567"
                     />
                   </div>
                   <div>
@@ -225,7 +225,7 @@ const CVBuilder = () => {
                       value={cvData.location}
                       onChange={(e) => handleChange('location', e.target.value)}
                       className="input-field"
-                      placeholder="New York, USA"
+                      placeholder="Colombo, Sri Lanka"
                     />
                   </div>
                 </div>
@@ -251,7 +251,7 @@ const CVBuilder = () => {
                 </div>
                 {cvData.experience.map((exp, index) => (
                   <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <input
                         type="text"
                         value={exp.title}
@@ -302,7 +302,7 @@ const CVBuilder = () => {
                 </div>
                 {cvData.education.map((edu, index) => (
                   <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <input
                         type="text"
                         value={edu.degree}
@@ -356,7 +356,7 @@ const CVBuilder = () => {
                   value={cvData.languages}
                   onChange={(e) => handleChange('languages', e.target.value)}
                   className="input-field"
-                  placeholder="English (Native), Spanish (Fluent)"
+                  placeholder="Type here"
                 />
               </div>
 

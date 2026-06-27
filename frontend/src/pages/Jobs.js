@@ -107,7 +107,7 @@ const Jobs = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Find Your Dream Job</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Find Your Dream Job</h1>
           <p className="text-gray-600 mt-1">Discover {pagination.total}+ opportunities</p>
         </div>
 
@@ -222,7 +222,7 @@ const Jobs = () => {
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}
+                          Rs. {job.salary_min?.toLocaleString()} - Rs. {job.salary_max?.toLocaleString()}
                         </div>
                       )}
                     </div>
@@ -252,12 +252,12 @@ const Jobs = () => {
             )}
 
             {pagination.pages > 1 && (
-              <div className="mt-8 flex justify-center gap-2">
+              <div className="mt-8 flex justify-center gap-1 sm:gap-2">
                 {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-lg ${
+                    className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg ${
                       pagination.current_page === page
                         ? 'bg-primary-600 text-white'
                         : 'bg-white text-gray-700 hover:bg-gray-50'

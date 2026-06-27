@@ -14,41 +14,36 @@ from routes.blog import blog_bp
 from routes.chatbot import chatbot_bp
 from utils.firebase_config import init_firebase
 
-def create_app():
-    app = Flask(__name__)
-    
-    allowed_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
-    CORS(app, origins=allowed_origins, allow_headers=["Content-Type", "X-User-Id"], supports_credentials=True, methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-    
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-    
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(jobs_bp, url_prefix='/api/jobs')
-    app.register_blueprint(applications_bp, url_prefix='/api/applications')
-    app.register_blueprint(ai_bp, url_prefix='/api/ai')
-    app.register_blueprint(upload_bp, url_prefix='/api/upload')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
-    app.register_blueprint(blog_bp, url_prefix='/api/blogs')
-    app.register_blueprint(chatbot_bp, url_prefix='/api/chatbot')
-    
-    db, bucket = init_firebase()
-    
-    @app.route('/api/health', methods=['GET'])
-    def health_check():
-        return jsonify({
-            'status': 'healthy',
-            'service': 'JobNex AI Backend',
-            'version': '3.0.0',
-            'database': 'Firebase Firestore',
-            'storage': 'Firebase Storage'
-        }), 200
-    
-    
-    return app
+app = Flask(__name__)
+
+allowed_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+CORS(app, origins=allowed_origins, allow_headers=["Content-Type", "X-User-Id"], supports_credentials=True, methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+app.register_blueprint(auth_bp, url_prefix='/api/auth')
+app.register_blueprint(jobs_bp, url_prefix='/api/jobs')
+app.register_blueprint(applications_bp, url_prefix='/api/applications')
+app.register_blueprint(ai_bp, url_prefix='/api/ai')
+app.register_blueprint(upload_bp, url_prefix='/api/upload')
+app.register_blueprint(admin_bp, url_prefix='/api/admin')
+app.register_blueprint(blog_bp, url_prefix='/api/blogs')
+app.register_blueprint(chatbot_bp, url_prefix='/api/chatbot')
+
+db, bucket = init_firebase()
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'service': 'JobNex AI Backend',
+        'version': '3.0.0',
+        'database': 'Firebase Firestore',
+        'storage': 'Firebase Storage'
+    }), 200
 
 
 if __name__ == '__main__':
-    app = create_app()
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
     

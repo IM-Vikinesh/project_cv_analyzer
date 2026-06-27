@@ -68,9 +68,17 @@
 }
 
 @media (max-width: 640px) {
+  .p-responsive {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
   .fixed.bottom-24.right-6.z-50 {
     right: 1rem !important;
-    width: calc(100vw - 2rem) !important;
+    left: 1rem !important;
+    width: auto !important;
     max-height: calc(100vh - 140px) !important;
   }
 }

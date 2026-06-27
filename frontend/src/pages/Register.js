@@ -63,7 +63,7 @@ const Register = () => {
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Your Account</h2>
           <p className="text-gray-600 mb-6">Start your AI-powered job search today</p>
           

@@ -177,7 +177,7 @@ const JobDetails = () => {
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="p-8">
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
               <div className="flex items-start gap-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-2xl flex items-center justify-center">
                   <span className="text-primary-600 font-bold text-3xl">
@@ -293,7 +293,7 @@ const JobDetails = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-sm text-gray-500">Salary Range</p>
                       <p className="font-medium">
-                        ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}
+                        Rs. {job.salary_min?.toLocaleString()} - Rs. {job.salary_max?.toLocaleString()}
                       </p>
                     </div>
                   )}

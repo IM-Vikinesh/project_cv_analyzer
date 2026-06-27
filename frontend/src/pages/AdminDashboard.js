@@ -135,7 +135,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
             <div className="flex items-center gap-4">
@@ -147,8 +147,8 @@ const AdminDashboard = () => {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex gap-6">
-          <div className="w-64 bg-white rounded-lg shadow p-4 h-fit">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-64 bg-white rounded-lg shadow p-4 h-fit">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'dashboard' ? 'bg-primary-500 text-white' : 'hover:bg-gray-50'}`}
@@ -191,7 +191,7 @@ const AdminDashboard = () => {
                 {activeTab === 'dashboard' && (
                   <div>
                     <h2 className="text-2xl font-bold mb-6">Overview</h2>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="bg-blue-50 p-6 rounded-lg">
                         <div className="text-3xl font-bold text-blue-600">{stats.users}</div>
                         <div className="text-gray-600">Total Users</div>
@@ -211,7 +211,8 @@ const AdminDashboard = () => {
                 {activeTab === 'users' && (
                   <div>
                     <h2 className="text-2xl font-bold mb-6">Users</h2>
-                    <table className="w-full">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
                       <thead>
                         <tr className="border-b">
                           <th className="text-left py-2">Name</th>
@@ -250,6 +251,7 @@ const AdminDashboard = () => {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 )}
 
@@ -264,7 +266,8 @@ const AdminDashboard = () => {
                         Add Job
                       </button>
                     </div>
-                    <table className="w-full">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
                       <thead>
                         <tr className="border-b">
                           <th className="text-left py-2">Title</th>
@@ -297,6 +300,7 @@ const AdminDashboard = () => {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 )}
 

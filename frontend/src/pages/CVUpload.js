@@ -78,7 +78,7 @@ const CVUpload = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">AI Resume Analyzer</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Resume Analyzer</h1>
           <p className="text-gray-600 mt-1">Upload your resume and get AI-powered insights</p>
         </div>
 
@@ -89,8 +89,8 @@ const CVUpload = () => {
             {!file ? (
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${
-                  dragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-400'
+                className={`border-2 border-dashed rounded-xl p-6 sm:p-12 text-center cursor-pointer transition-colors ${
+                   dragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-400'
                 }`}
                 onDragEnter={() => setDragActive(true)}
                 onDragLeave={() => setDragActive(false)}
@@ -281,7 +281,7 @@ const CVUpload = () => {
             {analysis.contact && (
               <div className="mb-8">
                 <h3 className="font-semibold text-gray-900 mb-4">Contact Information</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {analysis.contact.emails?.length > 0 && (
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-sm text-gray-500">Email</p>

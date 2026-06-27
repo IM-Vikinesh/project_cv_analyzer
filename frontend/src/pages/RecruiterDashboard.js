@@ -173,7 +173,7 @@ const RecruiterDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Recruiter Dashboard</h1>
             <p className="text-gray-600 mt-1">Manage your job postings and applications</p>
@@ -189,7 +189,7 @@ const RecruiterDashboard = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <p className="text-sm text-gray-600">Total Jobs</p>
             <p className="text-2xl font-bold text-gray-900">{jobs.length}</p>
@@ -321,7 +321,7 @@ const RecruiterDashboard = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
                   <input
@@ -346,7 +346,7 @@ const RecruiterDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                   <input
@@ -369,7 +369,7 @@ const RecruiterDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Min Salary</label>
                   <input
@@ -438,7 +438,7 @@ const RecruiterDashboard = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   <input
@@ -461,7 +461,7 @@ const RecruiterDashboard = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                 <button type="button" onClick={() => { setShowPostModal(false); resetForm(); }} className="flex-1 btn-outline">
                   Cancel
                 </button>

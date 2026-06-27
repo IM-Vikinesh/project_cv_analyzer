@@ -109,12 +109,12 @@ const Profile = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Profile Settings</h1>
           <p className="text-gray-600 mt-1">Manage your account information</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-8">
-          <div className="flex items-center gap-6 mb-8 pb-8 border-b">
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-8 pb-6 sm:pb-8 border-b">
             <div className="relative group cursor-pointer" onClick={handleImageClick}>
               {user?.profile_image_url ? (
                 <img
@@ -197,7 +197,7 @@ const Profile = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   className="input-field"
-                  placeholder="+1 234 567 890"
+                  placeholder="+94 77 123 4567"
                 />
               </div>
               <div>
@@ -208,7 +208,7 @@ const Profile = () => {
                   value={formData.location}
                   onChange={handleChange}
                   className="input-field"
-                  placeholder="City, Country"
+                  placeholder="Colombo, Sri Lanka"
                 />
               </div>
             </div>
@@ -377,7 +377,7 @@ const Profile = () => {
           </form>
         </div>
 
-        <div className="mt-8 bg-white rounded-2xl shadow-sm p-8">
+        <div className="mt-8 bg-white rounded-2xl shadow-sm p-4 sm:p-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Actions</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">

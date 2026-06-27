@@ -166,10 +166,25 @@ const Navbar = () => {
         </div>
       </div>
 
-      {isOpen && user && (
+      {isOpen && (
         <div className="md:hidden bg-white border-t">
+          {user && (
+            <div className="px-4 pt-3 pb-2 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                  <span className="text-primary-600 font-medium text-sm">
+                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                  <p className="text-xs text-gray-500 capitalize">{user.role?.replace('_', ' ')}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="px-2 pt-2 pb-3 space-y-1">
-            {links.map((link) => (
+            {user ? links.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -182,7 +197,34 @@ const Navbar = () => {
               >
                 {link.label}
               </Link>
-            ))}
+            )) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-primary-600"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-primary-600 bg-primary-50 hover:bg-primary-100"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
+            {user && (
+              <div className="border-t border-gray-100 pt-2 mt-2">
+                <button
+                  onClick={() => { handleLogout(); setIsOpen(false); }}
+                  className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

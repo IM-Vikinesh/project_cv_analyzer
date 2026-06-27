@@ -58,7 +58,7 @@ const Recommendations = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Job Recommendations</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Job Recommendations</h1>
           <p className="text-gray-600 mt-1">Personalized jobs based on your skills and experience</p>
         </div>
 
@@ -92,7 +92,7 @@ const Recommendations = () => {
                   className={`bg-white rounded-xl shadow-sm border-2 ${colors.border} overflow-hidden`}
                 >
                   <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center sm:justify-between mb-4">
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl flex items-center justify-center">
                           <span className="text-primary-600 font-bold text-2xl">
@@ -117,7 +117,7 @@ const Recommendations = () => {
                             <span className="capitalize">{rec.job?.job_type?.replace('-', ' ')}</span>
                             {rec.job?.salary_min && (
                               <span>
-                                ${rec.job.salary_min?.toLocaleString()} - ${rec.job.salary_max?.toLocaleString()}
+                                Rs. {rec.job.salary_min?.toLocaleString()} - Rs. {rec.job.salary_max?.toLocaleString()}
                               </span>
                             )}
                           </div>
@@ -166,7 +166,7 @@ const Recommendations = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <Link to={`/jobs/${rec.job?.id}`} className="btn-primary flex-1 text-center">
                         View Details
                       </Link>

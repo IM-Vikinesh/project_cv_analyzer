@@ -57,3 +57,5 @@ yarn-error.log*
 
 # Legacy
 project cv analayzer/
+
+.vercel
