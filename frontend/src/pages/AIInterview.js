@@ -197,6 +197,13 @@ const AIInterview = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Mock Interview</h1>
             <p className="text-gray-500 mt-2">Practice with AI-generated questions in a natural conversation</p>
           </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+              <p className="text-sm font-medium text-amber-800">Daily Limit Notice</p>
+              <p className="text-sm text-amber-700 mt-0.5">You can access <strong>one interview per day</strong>. Your limit resets every 12 hours. Make the most of each session!</p>
+            </div>
+          </div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-8">
             <div className="space-y-6">
               <div>

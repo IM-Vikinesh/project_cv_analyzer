@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import { auth } from '../firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const AuthContext = createContext(null);
 
@@ -111,7 +113,55 @@ if (response.data.success) {
     }
   };
 
+  const googleLogin = async () => {
+    try {
+      setError(null);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+
+      const response = await authAPI.googleAuth({ id_token: idToken });
+
+      if (response.data.success) {
+        const userData = response.data.user;
+        const mappedUser = {
+          id: userData.id,
+          name: userData.full_name,
+          email: userData.email,
+          role: userData.role,
+          phone: userData.phone,
+          location: userData.location,
+          bio: userData.bio,
+          skills: userData.skills,
+          experience: userData.experience,
+          education: userData.education,
+          company_name: userData.company_name,
+          position: userData.position,
+          company_website: userData.company_website,
+          linkedin_url: userData.linkedin_url,
+          twitter_url: userData.twitter_url,
+          facebook_url: userData.facebook_url,
+          profile_image_url: userData.profile_image_url,
+        };
+        localStorage.setItem('user', JSON.stringify(mappedUser));
+        localStorage.setItem('userId', userData.id);
+        setUser(mappedUser);
+        if (userData.role === 'admin') {
+          window.location.href = '/admin';
+        }
+        return mappedUser;
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Google sign-in failed';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
   const logout = async () => {
+    try {
+      await auth.signOut();
+    } catch {}
     localStorage.removeItem('user');
     localStorage.removeItem('userId');
     setUser(null);
@@ -158,6 +208,7 @@ if (response.data.success) {
     error,
     login,
     register,
+    googleLogin,
     logout,
     refreshUser,
     setError,

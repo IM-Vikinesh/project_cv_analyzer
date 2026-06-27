@@ -172,7 +172,7 @@ const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 pt-16 md:pt-20">
           <AppRoutes />
           <Toaster 
             position="top-right"

@@ -5,6 +5,7 @@ from utils.firebase_config import init_firebase, get_db
 from utils.firestore_db import (
     create_user, get_user_by_id, get_user_by_email, update_user, delete_user
 )
+from utils.firebase_auth import verify_firebase_token
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -105,6 +106,85 @@ def login():
         }), 200
     
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/google', methods=['POST'])
+def google_auth():
+    try:
+        init_firebase()
+        data = request.get_json()
+        id_token = data.get('id_token')
+
+        if not id_token:
+            return jsonify({'error': 'ID token is required'}), 400
+
+        decoded_token, error = verify_firebase_token(id_token)
+        if error:
+            return jsonify({'error': f'Invalid token: {error}'}), 401
+
+        email = decoded_token.get('email')
+        name = decoded_token.get('name') or email.split('@')[0]
+        firebase_uid = decoded_token.get('uid')
+        photo_url = decoded_token.get('picture', '')
+
+        if not email:
+            return jsonify({'error': 'Email not available from token'}), 400
+
+        existing_user = get_user_by_email(email)
+        if existing_user:
+            user_data = {k: v for k, v in existing_user.items() if k != 'password'}
+            return jsonify({'success': True, 'user': user_data}), 200
+
+        user_data = {
+            'full_name': name,
+            'email': email,
+            'password': '',
+            'role': 'job_seeker',
+            'firebase_uid': firebase_uid,
+            'profile_image_url': photo_url,
+            'phone': '',
+            'location': '',
+            'bio': '',
+            'skills': '',
+            'experience': '',
+            'education': '',
+            'company_name': '',
+            'position': '',
+            'company_website': '',
+            'linkedin_url': '',
+            'twitter_url': '',
+            'facebook_url': ''
+        }
+
+        user_id = create_user(user_data)
+
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user_id,
+                'full_name': name,
+                'email': email,
+                'role': 'job_seeker',
+                'profile_image_url': photo_url,
+                'company_name': '',
+                'position': '',
+                'company_website': '',
+                'linkedin_url': '',
+                'twitter_url': '',
+                'facebook_url': '',
+                'phone': '',
+                'location': '',
+                'bio': '',
+                'skills': '',
+                'experience': '',
+                'education': '',
+            }
+        }), 201
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 

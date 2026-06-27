@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,20 +8,19 @@ const Navbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const timerRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  const isHome = location.pathname === '/';
 
   useEffect(() => {
-    if (showUserMenu) {
-      timerRef.current = setTimeout(() => {
-        setShowUserMenu(false);
-      }, 2000);
-    }
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [showUserMenu]);
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setShowUserMenu(false);
+    setIsOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -53,30 +52,37 @@ const Navbar = () => {
 
   const links = user?.role === 'admin' ? adminLinks : user?.role === 'recruiter' ? recruiterLinks : jobSeekerLinks;
 
+  const navBg = isHome && !scrolled
+    ? 'bg-transparent'
+    : 'bg-white/80 backdrop-blur-xl shadow-sm';
+
+  const linkColor = isHome && !scrolled ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-primary-600';
+  const activeLinkColor = isHome && !scrolled ? 'text-white bg-white/10' : 'text-primary-600 bg-primary-50';
+  const logoGradient = isHome && !scrolled ? 'from-white to-white' : 'from-primary-600 to-secondary-600';
+  const borderColor = isHome && !scrolled ? 'border-white/10' : 'border-gray-100';
+
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-16 md:h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-lg flex items-center justify-center">
+            <Link to="/" className="flex items-center space-x-2 group">
+              <div className={`w-9 h-9 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105`}>
                 <span className="text-white font-bold text-sm">JN</span>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+              <span className={`text-xl font-bold bg-gradient-to-r ${logoGradient} bg-clip-text text-transparent`}>
                 JobNex AI
               </span>
             </Link>
 
             {user && (
-              <div className="hidden md:flex ml-10 space-x-4">
+              <div className="hidden lg:flex ml-10 space-x-1">
                 {links.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive(link.path)
-                        ? 'text-primary-600 bg-primary-50'
-                        : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+                    className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      isActive(link.path) ? activeLinkColor : linkColor
                     }`}
                   >
                     {link.label}
@@ -91,26 +97,30 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
+                  className={`flex items-center space-x-2.5 px-3.5 py-2 rounded-xl transition-all duration-200 ${
+                    isHome && !scrolled ? 'hover:bg-white/10' : 'hover:bg-gray-100'
+                  }`}
                 >
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span className="text-primary-600 font-medium text-sm">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isHome && !scrolled ? 'bg-white/20 text-white' : 'bg-primary-100 text-primary-600'
+                  }`}>
+                    <span className="font-medium text-sm">
                       {user.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <span className="hidden md:block text-sm font-medium text-gray-700">
+                  <span className={`hidden md:block text-sm font-medium ${isHome && !scrolled ? 'text-white' : 'text-gray-700'}`}>
                     {user.name}
                   </span>
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 ${isHome && !scrolled ? 'text-white/60' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border">
+                  <div className={`absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border ${borderColor}`}>
                     <Link
                       to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors"
                       onClick={() => setShowUserMenu(false)}
                     >
                       Profile
@@ -118,15 +128,16 @@ const Navbar = () => {
                     {user.role === 'recruiter' && (
                       <Link
                         to="/recruiter"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
                         Recruiter Dashboard
                       </Link>
                     )}
+                    <div className={`border-t ${borderColor} my-1`} />
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
                       Sign Out
                     </button>
@@ -134,16 +145,24 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <Link
                   to="/login"
-                  className="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium"
+                  className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    isHome && !scrolled
+                      ? 'text-gray-200 hover:text-white hover:bg-white/10'
+                      : 'text-gray-600 hover:text-primary-600'
+                  }`}
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="btn-primary text-sm"
+                  className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                    isHome && !scrolled
+                      ? 'bg-white text-primary-700 hover:bg-gray-100 shadow-lg'
+                      : 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 shadow-lg shadow-primary-200'
+                  }`}
                 >
                   Get Started
                 </Link>
@@ -152,7 +171,9 @@ const Navbar = () => {
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden ml-2 p-2 rounded-md text-gray-400 hover:text-gray-500"
+              className={`lg:hidden ml-3 p-2.5 rounded-xl transition-colors ${
+                isHome && !scrolled ? 'text-white hover:bg-white/10' : 'text-gray-400 hover:bg-gray-100'
+              }`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isOpen ? (
@@ -167,7 +188,7 @@ const Navbar = () => {
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-white border-t">
+        <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-xl">
           {user && (
             <div className="px-4 pt-3 pb-2 border-b border-gray-100">
               <div className="flex items-center space-x-3">
@@ -188,10 +209,10 @@ const Navbar = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                className={`block px-3 py-2.5 rounded-xl text-base font-medium transition-colors ${
                   isActive(link.path)
                     ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-600 hover:text-primary-600'
+                    : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
                 }`}
                 onClick={() => setIsOpen(false)}
               >
@@ -201,14 +222,14 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-primary-600"
+                  className="block px-3 py-2.5 rounded-xl text-base font-medium text-gray-600 hover:text-primary-600 hover:bg-gray-50"
                   onClick={() => setIsOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-primary-600 bg-primary-50 hover:bg-primary-100"
+                  className="block px-3 py-2.5 rounded-xl text-base font-medium text-white bg-gradient-to-r from-primary-600 to-primary-700 mx-2"
                   onClick={() => setIsOpen(false)}
                 >
                   Get Started
@@ -219,7 +240,7 @@ const Navbar = () => {
               <div className="border-t border-gray-100 pt-2 mt-2">
                 <button
                   onClick={() => { handleLogout(); setIsOpen(false); }}
-                  className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-base font-medium text-red-600 hover:bg-red-50"
                 >
                   Sign Out
                 </button>
