@@ -579,6 +579,109 @@ def calculate_ats_score(resume_text, job_description):
     }
 
 
+def calculate_general_ats_score(resume_text, analysis_result):
+    score_breakdown = {}
+    word_count = len(resume_text.split())
+
+    if word_count < 150:
+        length_score = 10
+    elif word_count < 300:
+        length_score = 15
+    elif word_count <= 800:
+        length_score = 20
+    else:
+        length_score = 15
+    score_breakdown['resume_length'] = {'score': length_score, 'max': 20, 'detail': f'{word_count} words'}
+
+    skills = analysis_result.get('skills', [])
+    skills_count = len(skills)
+    if skills_count >= 15:
+        skills_score = 25
+    elif skills_count >= 10:
+        skills_score = 20
+    elif skills_count >= 5:
+        skills_score = 15
+    elif skills_count >= 3:
+        skills_score = 10
+    else:
+        skills_score = 5
+    score_breakdown['skills'] = {'score': skills_score, 'max': 25, 'detail': f'{skills_count} skills found'}
+
+    exp = analysis_result.get('experience', [])
+    has_descriptions = any(
+        isinstance(e, dict) and len(e.get('description', '').strip()) > 50
+        for e in exp
+    )
+    exp_count = len(exp)
+    if exp_count >= 3 and has_descriptions:
+        exp_score = 20
+    elif exp_count >= 2:
+        exp_score = 15
+    elif exp_count >= 1:
+        exp_score = 10
+    else:
+        exp_score = 5
+    score_breakdown['experience'] = {'score': exp_score, 'max': 20, 'detail': f'{exp_count} roles'}
+
+    edu = analysis_result.get('education', {})
+    edu_entries = edu.get('entries', []) if isinstance(edu, dict) else (edu if isinstance(edu, list) else [])
+    if edu_entries and any(e.get('institution') or e.get('degree') for e in edu_entries):
+        edu_score = 15
+    else:
+        edu_score = 5
+    score_breakdown['education'] = {'score': edu_score, 'max': 15, 'detail': f'{len(edu_entries)} entries' if edu_entries else 'None'}
+
+    contact = analysis_result.get('contact', {})
+    has_email = bool(contact.get('emails'))
+    has_phone = bool(contact.get('phones'))
+    if has_email and has_phone:
+        contact_score = 10
+    elif has_email:
+        contact_score = 7
+    else:
+        contact_score = 3
+    score_breakdown['contact_info'] = {'score': contact_score, 'max': 10, 'detail': 'Email + Phone' if has_email and has_phone else ('Email only' if has_email else 'Missing')}
+
+    achievements = analysis_result.get('achievements', [])
+    ach_count = len(achievements) if achievements else 0
+    if ach_count >= 3:
+        ach_score = 10
+    elif ach_count >= 1:
+        ach_score = 7
+    else:
+        ach_score = 3
+    score_breakdown['achievements'] = {'score': ach_score, 'max': 10, 'detail': f'{ach_count} achievements'}
+
+    total = min(
+        length_score + skills_score + exp_score + edu_score + contact_score + ach_score,
+        100
+    )
+
+    suggestions = []
+    if word_count < 300:
+        suggestions.append("Increase resume length to 300-800 words for better ATS compatibility.")
+    if skills_count < 10:
+        suggestions.append(f"Add more relevant skills. You currently have {skills_count}. Aim for 10+.")
+    if exp_count < 2:
+        suggestions.append("Include more detailed work experience entries with measurable achievements.")
+    if not has_descriptions:
+        suggestions.append("Add detailed descriptions to your experience entries with specific accomplishments and metrics.")
+    if not has_email:
+        suggestions.append("Include a professional email address at the top of your resume.")
+    if ach_count < 3:
+        suggestions.append("Add more achievements with quantifiable results (numbers, percentages, etc.).")
+    if not edu_entries:
+        suggestions.append("Include an education section to strengthen your resume.")
+    suggestions.append("Use action verbs and quantify achievements where possible.")
+
+    return {
+        'success': True,
+        'score': total,
+        'breakdown': score_breakdown,
+        'suggestions': suggestions,
+    }
+
+
 def recommend_jobs(user_skills, jobs):
     if not user_skills:
         return []

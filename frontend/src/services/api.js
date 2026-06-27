@@ -19,6 +19,19 @@ api.interceptors.request.use(
   }
 );
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 429 && error.response?.data?.limit_exceeded) {
+      try {
+        const toast = require('react-hot-toast').default;
+        toast.error(error.response.data.error || 'Your daily limit is over. Try again after 12 hours.');
+      } catch {}
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),

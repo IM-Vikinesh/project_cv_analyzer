@@ -201,3 +201,29 @@ def update_blog(blog_id, data):
 
 def delete_blog(blog_id):
     get_blogs_collection().document(blog_id).delete()
+
+
+def get_daily_usage(user_id):
+    from datetime import date
+    today = date.today().isoformat()
+    doc_ref = get_db().collection('daily_usage').document(f"{user_id}_{today}")
+    doc = doc_ref.get()
+    if doc.exists:
+        return doc.to_dict().get('count', 0)
+    return 0
+
+
+def increment_daily_usage(user_id):
+    from datetime import date
+    from google.cloud.firestore_v1 import Increment
+    today = date.today().isoformat()
+    doc_ref = get_db().collection('daily_usage').document(f"{user_id}_{today}")
+    doc = doc_ref.get()
+    if doc.exists:
+        doc_ref.update({'count': Increment(1)})
+    else:
+        doc_ref.set({
+            'user_id': user_id,
+            'date': today,
+            'count': 1
+        })

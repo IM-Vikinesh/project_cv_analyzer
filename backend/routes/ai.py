@@ -4,11 +4,23 @@ import tempfile
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from utils.firebase_config import init_firebase
-from utils.firestore_db import get_ai_analysis_collection, get_user_by_id, update_user
-from utils.ai_processor import analyze_resume, recommend_with_gaps
+from utils.firestore_db import get_ai_analysis_collection, get_user_by_id, update_user, get_daily_usage, increment_daily_usage
+from utils.ai_processor import analyze_resume, recommend_with_gaps, calculate_general_ats_score
 from utils.file_storage import upload_file as fs_upload_file
 
 ai_bp = Blueprint('ai', __name__)
+
+DAILY_LIMIT = 10
+
+
+def check_ai_limit(user_id):
+    user = get_user_by_id(user_id)
+    if user and user.get('role') == 'admin':
+        return None
+    usage = get_daily_usage(user_id)
+    if usage >= DAILY_LIMIT:
+        return "Your daily limit is over. Try again after 12 hours."
+    return None
 
 
 @ai_bp.route('/analyze-cv', methods=['POST'])
@@ -21,6 +33,11 @@ def analyze_cv():
         
         file = request.files['file']
         user_id = request.form.get('user_id')
+
+        if user_id:
+            limit_err = check_ai_limit(user_id)
+            if limit_err:
+                return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
         
         if not file.filename:
             return jsonify({'error': 'No file selected'}), 400
@@ -43,6 +60,24 @@ def analyze_cv():
                     os.remove(tmp_path)
                 except:
                     pass
+
+        resume_text = ""
+        try:
+            from utils.ai_processor import extract_text_from_pdf
+            resume_text = extract_text_from_pdf(tmp_path)
+        except:
+            pass
+
+        analysis_result['ats_score'] = None
+        if resume_text.strip():
+            try:
+                ats = calculate_general_ats_score(resume_text, analysis_result)
+                analysis_result['ats_score'] = ats
+            except Exception as e:
+                print(f"ATS score calculation error: {e}")
+
+        if user_id:
+            increment_daily_usage(user_id)
         
         doc_ref = get_ai_analysis_collection().document()
         analysis_data = {
@@ -75,6 +110,10 @@ def analyze():
         
         if not user_id:
             return jsonify({'error': 'user_id is required'}), 400
+
+        limit_err = check_ai_limit(user_id)
+        if limit_err:
+            return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
         
         analysis_data = {
             'user_id': user_id,
@@ -83,6 +122,8 @@ def analyze():
             'result_data': data.get('result_data', {}),
             'score': data.get('score', 0)
         }
+        
+        increment_daily_usage(user_id)
         
         doc_ref = get_ai_analysis_collection().document()
         doc_ref.set(analysis_data)
@@ -287,6 +328,12 @@ def generate_cover_letter_route():
     try:
         init_firebase()
         data = request.get_json()
+        user_id = request.headers.get('X-User-Id') or data.get('user_id')
+
+        if user_id:
+            limit_err = check_ai_limit(user_id)
+            if limit_err:
+                return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
         
         job_title = data.get('job_title', '') or ''
         company = data.get('company', '') or ''
@@ -353,6 +400,9 @@ Format as plain text ready to send as an email or letter."""
                 applicant_bio=applicant_bio,
                 applicant_location=applicant_location,
             )
+
+        if user_id:
+            increment_daily_usage(user_id)
         
         return jsonify({'success': True, 'cover_letter': cover_letter}), 200
     
@@ -444,6 +494,7 @@ def ai_interview():
     try:
         init_firebase()
         data = request.get_json()
+        user_id = request.headers.get('X-User-Id') or data.get('user_id')
         action = data.get('action', '')
         job_title = data.get('job_title', '')
         job_description = data.get('job_description', '')
@@ -454,6 +505,11 @@ def ai_interview():
 
         if not job_title:
             return jsonify({'error': 'job_title is required'}), 400
+
+        if user_id and action != 'evaluate':
+            limit_err = check_ai_limit(user_id)
+            if limit_err:
+                return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
 
         if action == 'start':
             prompt = f"""Generate 5 interview questions for a {job_title} position.
@@ -476,6 +532,8 @@ Example: ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 
                 parsed = response.strip().split('\n')[:5]
                 parsed = [q.lstrip('0123456789.)- ') for q in parsed if q.strip()]
 
+            if user_id:
+                increment_daily_usage(user_id)
             return jsonify({'success': True, 'questions': parsed[:5]}), 200
 
         elif action == 'answer':

@@ -35,6 +35,8 @@ const ChatWindow = ({ onClose }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
+  const chatRef = useRef(null);
+
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -54,6 +56,18 @@ const ChatWindow = ({ onClose }) => {
       inputRef.current?.focus();
     }
   }, [isLoading, historyLoaded]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (chatRef.current && !chatRef.current.contains(e.target)) {
+        const btn = document.querySelector('[aria-label="Open chat"], [aria-label="Close chat"]');
+        if (btn && btn.contains(e.target)) return;
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
 
   const loadHistory = async () => {
     try {
@@ -115,9 +129,13 @@ const ChatWindow = ({ onClose }) => {
       }
     } catch (error) {
       const errorDetail = error.response?.data?.error || error.message || 'Unable to connect to the AI service.';
+      const isLimit = error.response?.status === 429;
+      const content = isLimit
+        ? 'I apologize, but ' + errorDetail
+        : 'I apologize, but I encountered an issue: ' + errorDetail + '\n\n**Tip:** If this persists, ensure a valid `GOOGLE_API_KEY` (Gemini) or `OPENAI_API_KEY` is configured in the backend `.env` file.';
       const errorMessage = {
         role: 'assistant',
-        content: 'I apologize, but I encountered an issue: ' + errorDetail + '\n\n**Tip:** If this persists, ensure a valid `GOOGLE_API_KEY` (Gemini) or `OPENAI_API_KEY` is configured in the backend `.env` file.',
+        content,
         timestamp: new Date().toISOString()
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -145,7 +163,7 @@ const ChatWindow = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 w-[calc(100vw-2rem)] sm:w-[380px] h-[600px] max-h-[calc(100vh-120px)] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-slide-up">
+    <div ref={chatRef} className="fixed bottom-24 right-6 z-50 w-[calc(100vw-2rem)] sm:w-[380px] h-[600px] max-h-[calc(100vh-120px)] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-slide-up">
       <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-secondary-600 px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">

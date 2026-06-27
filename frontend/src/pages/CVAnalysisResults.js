@@ -201,10 +201,11 @@ const CVAnalysisResults = () => {
         )}
 
         {/* Metric Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {[
             { label: 'Words Processed', value: resultData.word_count || 0, color: 'from-blue-500 to-blue-600', shadow: 'shadow-blue-500/20' },
             { label: 'Skills Detected', value: resultData.skills?.length || 0, color: 'from-primary-500 to-primary-600', shadow: 'shadow-primary-500/20' },
+            { label: 'ATS Score', value: resultData.ats_score?.score != null ? `${resultData.ats_score.score}%` : '--', color: 'from-amber-500 to-orange-600', shadow: 'shadow-amber-500/20' },
             { label: 'Sentences', value: resultData.sentence_count || 0, color: 'from-secondary-500 to-secondary-600', shadow: 'shadow-secondary-500/20' },
             { label: 'Roles Found', value: resultData.experience?.length || 0, color: 'from-green-500 to-green-600', shadow: 'shadow-green-500/20' },
           ].map((stat, i) => (
@@ -215,6 +216,63 @@ const CVAnalysisResults = () => {
             </div>
           ))}
         </div>
+
+        {/* ATS Breakdown */}
+        {resultData.ats_score?.breakdown && (
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">ATS Score Breakdown</h2>
+            </div>
+            <div className="space-y-4">
+              {Object.entries(resultData.ats_score.breakdown).map(([key, item]) => {
+                const pct = Math.round((item.score / item.max) * 100);
+                const barColor = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500';
+                return (
+                  <div key={key}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium text-gray-700 capitalize">{key.replace(/_/g, ' ')}</span>
+                      <span className="text-gray-500">{item.score}/{item.max} &middot; {item.detail}</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2.5">
+                      <div className={`h-2.5 rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="pt-4 border-t border-gray-100">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-gray-900 text-lg">Total ATS Score</span>
+                  <span className={`text-2xl font-extrabold ${resultData.ats_score.score >= 70 ? 'text-green-600' : resultData.ats_score.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                    {resultData.ats_score.score}/100
+                  </span>
+                </div>
+              </div>
+            </div>
+            {resultData.ats_score.suggestions?.length > 0 && (
+              <div className="mt-6 p-5 bg-amber-50 rounded-2xl border border-amber-200">
+                <h4 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Suggestions to Improve
+                </h4>
+                <ul className="space-y-2">
+                  {resultData.ats_score.suggestions.map((s, i) => (
+                    <li key={i} className="text-sm text-amber-700 flex items-start gap-2">
+                      <span className="mt-1 w-1.5 h-1.5 bg-amber-400 rounded-full flex-shrink-0" />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Summary Card */}
         {resultData.summary && (

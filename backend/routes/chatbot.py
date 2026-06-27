@@ -3,10 +3,21 @@ import uuid
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from utils.firebase_config import init_firebase, get_db
-from utils.firestore_db import get_user_by_id
+from utils.firestore_db import get_user_by_id, get_daily_usage, increment_daily_usage
 from utils.gemini_helper import assistant
 
 chatbot_bp = Blueprint('chatbot', __name__)
+DAILY_LIMIT = 10
+
+
+def check_ai_limit(user_id):
+    user = get_user_by_id(user_id)
+    if user and user.get('role') == 'admin':
+        return None
+    usage = get_daily_usage(user_id)
+    if usage >= DAILY_LIMIT:
+        return "Your daily limit is over. Try again after 12 hours."
+    return None
 
 
 def get_chat_messages_collection():
@@ -26,6 +37,10 @@ def chat():
 
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
+
+        limit_err = check_ai_limit(user_id)
+        if limit_err:
+            return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
 
         message = data.get('message', '').strip()
         session_id = data.get('session_id')
@@ -104,6 +119,8 @@ def chat():
             'updated_at': datetime.now(),
             'message_count': session_ref.get().to_dict().get('message_count', 0) + 2
         })
+
+        increment_daily_usage(user_id)
 
         return jsonify({
             'success': True,
@@ -229,6 +246,10 @@ def cv_analysis():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
 
+        limit_err = check_ai_limit(user_id)
+        if limit_err:
+            return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
+
         data = request.get_json()
         cv_text = data.get('cv_text', '').strip()
         specific_focus = data.get('focus', 'general')
@@ -271,6 +292,7 @@ Be specific and actionable. Provide before/after rewrites for weak bullet points
         if error:
             return jsonify({'error': error}), 500
 
+        increment_daily_usage(user_id)
         return jsonify({'success': True, 'analysis': response}), 200
 
     except Exception as e:
@@ -287,6 +309,10 @@ def career_roadmap():
 
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
+
+        limit_err = check_ai_limit(user_id)
+        if limit_err:
+            return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
 
         data = request.get_json()
         target_role = data.get('target_role', '').strip()
@@ -336,6 +362,7 @@ Make the roadmap practical, specific, and tailored to the user's current skill l
         if error:
             return jsonify({'error': error}), 500
 
+        increment_daily_usage(user_id)
         return jsonify({'success': True, 'roadmap': response}), 200
 
     except Exception as e:
@@ -352,6 +379,10 @@ def interview_coach():
 
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
+
+        limit_err = check_ai_limit(user_id)
+        if limit_err:
+            return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
 
         data = request.get_json()
         action = data.get('action', 'generate_questions')
@@ -417,6 +448,7 @@ Be constructive and specific."""
         if error:
             return jsonify({'error': error}), 500
 
+        increment_daily_usage(user_id)
         return jsonify({'success': True, 'response': response}), 200
 
     except Exception as e:
@@ -433,6 +465,10 @@ def job_recommendations():
 
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
+
+        limit_err = check_ai_limit(user_id)
+        if limit_err:
+            return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
 
         data = request.get_json()
         user_skills_input = data.get('skills', '').strip()
@@ -494,6 +530,7 @@ If no specific job listings are available, provide general job recommendations b
         if error:
             return jsonify({'error': error}), 500
 
+        increment_daily_usage(user_id)
         return jsonify({'success': True, 'recommendations': response}), 200
 
     except Exception as e:
