@@ -1,0 +1,21 @@
+[project]
+name = "jobnex-backend"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask==3.0.0",
+    "Flask-CORS==4.0.0",
+    "Werkzeug==3.0.1",
+    "firebase-admin==6.3.0",
+    "openai>=1.12.0",
+    "nltk==3.8.1",
+    "pdfminer.six==20251230",
+    "pdfplumber==0.11.9",
+    "pypdf==6.10.2",
+    "PyMuPDF==1.23.26",
+    "python-dotenv==1.0.1",
+    "google-generativeai==0.8.3",
+]
+
+[tool.vercel]
+entrypoint = "api.handler:app"

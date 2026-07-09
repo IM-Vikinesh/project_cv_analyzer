@@ -1,0 +1,13 @@
+
+JOHN DOE
+Email: john@example.com
+
+EDUCATION
+Stanford University - MSc Computer Science 2018-2022
+MIT - BSc Electrical Engineering 2014-2018
+
+EXPERIENCE
+Software Engineer at Google Inc
+2022-Present
+- Developed web applications
+- Led team of 5 developers
