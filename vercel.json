@@ -1,0 +1,9 @@
+{
+  "framework": "create-react-app",
+  "buildCommand": "cd JobNexAI/frontend && CI=false npm run build",
+  "outputDirectory": "JobNexAI/frontend/build",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "installCommand": "cd JobNexAI/frontend && npm install"
+}
