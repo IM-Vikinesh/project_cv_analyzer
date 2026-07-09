@@ -203,6 +203,34 @@ def delete_blog(blog_id):
     get_blogs_collection().document(blog_id).delete()
 
 
+def get_saved_jobs_collection(user_id):
+    return get_users_collection().document(user_id).collection('saved_jobs')
+
+
+def toggle_saved_job(user_id, job_id):
+    doc_ref = get_saved_jobs_collection(user_id).document(job_id)
+    doc = doc_ref.get()
+    if doc.exists:
+        doc_ref.delete()
+        return {'saved': False}
+    else:
+        doc_ref.set({
+            'job_id': job_id,
+            'saved_at': datetime.now()
+        })
+        return {'saved': True}
+
+
+def get_saved_job_ids(user_id):
+    docs = get_saved_jobs_collection(user_id).stream()
+    return [doc.id for doc in docs]
+
+
+def is_job_saved(user_id, job_id):
+    doc = get_saved_jobs_collection(user_id).document(job_id).get()
+    return doc.exists
+
+
 def get_daily_usage(user_id, usage_type='general'):
     from datetime import date
     today = date.today().isoformat()
