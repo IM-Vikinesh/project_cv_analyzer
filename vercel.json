@@ -1,9 +1,28 @@
 {
-  "framework": "create-react-app",
-  "buildCommand": "cd JobNexAI/frontend && CI=false npm run build",
-  "outputDirectory": "JobNexAI/frontend/build",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "JobNexAI/frontend/build/**",
+      "use": "@vercel/static"
+    }
   ],
-  "installCommand": "cd JobNexAI/frontend && npm install"
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "buildCommand": "cd JobNexAI/frontend && CI=false npm run build",
+  "installCommand": "cd JobNexAI/frontend && npm install",
+  "outputDirectory": "JobNexAI/frontend/build"
 }
