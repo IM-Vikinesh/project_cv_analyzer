@@ -9,7 +9,7 @@ from utils.firestore_db import (
     update_application, get_application_by_id,
     create_blog, get_blog_by_id, update_blog, delete_blog,
     get_blogs, get_users_collection, get_jobs_collection, get_applications_collection, get_blogs_collection,
-    blog_to_dict
+    user_to_dict, job_to_dict, application_to_dict, blog_to_dict
 )
 
 admin_bp = Blueprint('admin', __name__)
@@ -44,11 +44,11 @@ def get_all_users():
         
         users = []
         for doc in get_users_collection().stream():
-            user = doc.to_dict()
-            user['id'] = doc.id
-            users.append(user)
+            user = user_to_dict(doc)
+            if user:
+                users.append(user)
         
-        users.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        users.sort(key=lambda x: x.get('created_at') or '', reverse=True)
         
         return jsonify({'success': True, 'users': users}), 200
     
@@ -116,8 +116,10 @@ def create_new_job():
         if not data.get('title') or not data.get('company_name'):
             return jsonify({'error': 'title and company_name are required'}), 400
         
+        recruiter_id = request.headers.get('X-User-Id') or data.get('recruiter_id', '')
+        
         job_data = {
-            'recruiter_id': data.get('recruiter_id', '1'),
+            'recruiter_id': recruiter_id,
             'title': data['title'],
             'company_name': data.get('company_name'),
             'company_logo_url': data.get('company_logo_url'),
@@ -182,11 +184,30 @@ def get_all_applications():
         
         applications = []
         for doc in get_applications_collection().stream():
-            app = doc.to_dict()
-            app['id'] = doc.id
+            app = application_to_dict(doc)
+            if not app:
+                continue
+
+            job_id = app.get('job_id')
+            applicant_id = app.get('applicant_id')
+
+            job = get_job_by_id(job_id) if job_id else None
+            applicant = get_user_by_id(applicant_id) if applicant_id else None
+
+            app['job_title'] = job.get('title') if job else 'Unknown Job'
+            app['company_name'] = job.get('company_name') if job else 'Unknown Company'
+
+            app['applicant_name'] = applicant.get('full_name') if applicant else 'Unknown Applicant'
+            app['applicant_email'] = applicant.get('email') if applicant else ''
+
+            recruiter_id = job.get('recruiter_id') if job else None
+            recruiter = get_user_by_id(recruiter_id) if recruiter_id else None
+            app['recruiter_name'] = recruiter.get('full_name') if recruiter else 'N/A'
+            app['recruiter_email'] = recruiter.get('email') if recruiter else 'N/A'
+
             applications.append(app)
         
-        applications.sort(key=lambda x: x.get('applied_at', ''), reverse=True)
+        applications.sort(key=lambda x: x.get('applied_at') or '', reverse=True)
         
         return jsonify({'success': True, 'applications': applications}), 200
     

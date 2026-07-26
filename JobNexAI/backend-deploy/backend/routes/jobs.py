@@ -2,7 +2,8 @@ import os
 from flask import Blueprint, request, jsonify
 from utils.firebase_config import init_firebase
 from utils.firestore_db import (
-    create_job, get_job_by_id, get_jobs, update_job, delete_job
+    create_job, get_job_by_id, get_jobs, update_job, delete_job,
+    toggle_saved_job, get_saved_job_ids, is_job_saved
 )
 
 jobs_bp = Blueprint('jobs', __name__)
@@ -77,7 +78,28 @@ def get_job(job_id):
         if not job:
             return jsonify({'error': 'Job not found'}), 404
         
+        user_id = request.headers.get('X-User-Id')
+        if user_id:
+            job['is_saved'] = is_job_saved(user_id, job_id)
+        
         return jsonify({'success': True, 'job': job}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@jobs_bp.route('/<job_id>/save', methods=['POST'])
+def save_job(job_id):
+    try:
+        init_firebase()
+        user_id = request.headers.get('X-User-Id')
+        
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        result = toggle_saved_job(user_id, job_id)
+        
+        return jsonify({'success': True, 'saved': result['saved']}), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
