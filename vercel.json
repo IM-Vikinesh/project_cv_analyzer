@@ -1,9 +1,30 @@
 {
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxDuration": 30
+      }
+    },
+    {
+      "src": "JobNexAI/frontend/build/index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
   "buildCommand": "cd JobNexAI/frontend && CI=false npm run build",
-  "outputDirectory": "JobNexAI/frontend/build",
-  "installCommand": "cd JobNexAI/frontend && npm install",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "outputDirectory": "JobNexAI/frontend/build"
 }
