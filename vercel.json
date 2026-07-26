@@ -1,4 +1,5 @@
 {
+  "installCommand": "cd JobNexAI/frontend && npm install && CI=false npm run build",
   "builds": [
     {
       "src": "api/index.py",
@@ -6,10 +7,6 @@
       "config": {
         "maxDuration": 30
       }
-    },
-    {
-      "src": "JobNexAI/frontend/build/index.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -25,6 +22,5 @@
       "dest": "/index.html"
     }
   ],
-  "buildCommand": "cd JobNexAI/frontend && CI=false npm run build",
   "outputDirectory": "JobNexAI/frontend/build"
 }
