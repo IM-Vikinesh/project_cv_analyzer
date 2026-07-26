@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from utils.firebase_config import init_firebase
 from utils.firestore_db import get_ai_analysis_collection, get_user_by_id, update_user, get_daily_usage, increment_daily_usage
-from utils.ai_processor import analyze_resume, recommend_with_gaps
+from utils.ai_processor import analyze_resume, recommend_with_gaps, calculate_general_ats_score
 from utils.file_storage import upload_file as fs_upload_file
 
 ai_bp = Blueprint('ai', __name__)
@@ -31,7 +31,7 @@ def analyze_cv():
         
         file = request.files['file']
         user_id = request.form.get('user_id')
-        
+
         if user_id:
             limit_err = check_ai_limit(user_id, usage_type='cv_analysis', daily_limit=2)
             if limit_err:
@@ -58,7 +58,22 @@ def analyze_cv():
                     os.remove(tmp_path)
                 except:
                     pass
-        
+
+        resume_text = ""
+        try:
+            from utils.ai_processor import extract_text_from_pdf
+            resume_text = extract_text_from_pdf(tmp_path)
+        except:
+            pass
+
+        analysis_result['ats_score'] = None
+        if resume_text.strip():
+            try:
+                ats = calculate_general_ats_score(resume_text, analysis_result)
+                analysis_result['ats_score'] = ats
+            except Exception as e:
+                print(f"ATS score calculation error: {e}")
+
         if user_id:
             increment_daily_usage(user_id, usage_type='cv_analysis')
         
@@ -312,12 +327,12 @@ def generate_cover_letter_route():
         init_firebase()
         data = request.get_json()
         user_id = request.headers.get('X-User-Id') or data.get('user_id')
-        
+
         if user_id:
             limit_err = check_ai_limit(user_id, usage_type='ai_other', daily_limit=5)
             if limit_err:
                 return jsonify({'error': limit_err, 'limit_exceeded': True}), 429
-
+        
         job_title = data.get('job_title', '') or ''
         company = data.get('company', '') or ''
         job_description = data.get('job_description', '') or ''
@@ -476,7 +491,6 @@ def ai_interview():
     from utils.gemini_helper import assistant
     try:
         init_firebase()
-        data = request.get_json()
         data = request.get_json()
         user_id = request.headers.get('X-User-Id') or data.get('user_id')
         action = data.get('action', '')

@@ -27,6 +27,7 @@ const RecruiterDashboard = () => {
     department: '',
     experience_level: 'mid',
   });
+  const [selectedApplication, setSelectedApplication] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -479,7 +480,7 @@ const RecruiterDashboard = () => {
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">Applications</h2>
-              <button onClick={() => setJobApplications([])} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => { setJobApplications([]); setSelectedApplication(null); }} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -501,7 +502,19 @@ const RecruiterDashboard = () => {
                         <p className="text-gray-600">{app.cover_letter.substring(0, 200)}...</p>
                       </div>
                     )}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={() => setSelectedApplication(selectedApplication === app.id ? null : app.id)}
+                        className="text-primary-600 hover:text-primary-500 text-sm font-medium flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Applicant Info
+                        <svg className={`w-4 h-4 transition-transform ${selectedApplication === app.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
                       <select
                         value={app.status}
                         onChange={(e) => updateApplicationStatus(app.id, e.target.value)}
@@ -514,6 +527,86 @@ const RecruiterDashboard = () => {
                         <option value="rejected">Rejected</option>
                       </select>
                     </div>
+                    {selectedApplication === app.id && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-semibold text-gray-900 mb-3">Applicant Details</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-gray-500">Full Name</p>
+                            <p className="font-medium text-gray-900">{app.applicant?.full_name || app.applicant?.name || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Email</p>
+                            <p className="font-medium text-gray-900">{app.applicant?.email || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Phone</p>
+                            <p className="font-medium text-gray-900">{app.applicant?.phone || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Location</p>
+                            <p className="font-medium text-gray-900">{app.applicant?.location || 'N/A'}</p>
+                          </div>
+                        </div>
+                        {app.applicant?.bio && (
+                          <div className="mt-3">
+                            <p className="text-gray-500 text-sm">Bio</p>
+                            <p className="text-gray-700 text-sm mt-1">{app.applicant.bio}</p>
+                          </div>
+                        )}
+                        {app.applicant?.skills && (
+                          <div className="mt-3">
+                            <p className="text-gray-500 text-sm">Skills</p>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {(Array.isArray(app.applicant.skills) ? app.applicant.skills : app.applicant.skills.split(',')).map((skill, idx) => (
+                                <span key={idx} className="bg-primary-100 text-primary-700 text-xs px-2 py-1 rounded-full">
+                                  {skill.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {app.applicant?.experience && (
+                          <div className="mt-3">
+                            <p className="text-gray-500 text-sm">Experience</p>
+                            <p className="text-gray-700 text-sm mt-1">{app.applicant.experience}</p>
+                          </div>
+                        )}
+                        {app.applicant?.education && (
+                          <div className="mt-3">
+                            <p className="text-gray-500 text-sm">Education</p>
+                            <p className="text-gray-700 text-sm mt-1">{app.applicant.education}</p>
+                          </div>
+                        )}
+                        {app.applicant?.resume_url && (
+                          <div className="mt-3">
+                            <a
+                              href={app.applicant.resume_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary-600 hover:text-primary-500 text-sm font-medium flex items-center gap-1"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              Download Resume
+                            </a>
+                          </div>
+                        )}
+                        {app.cover_letter && (
+                          <div className="mt-3">
+                            <p className="text-gray-500 text-sm">Cover Letter</p>
+                            <p className="text-gray-700 text-sm mt-1 whitespace-pre-wrap">{app.cover_letter}</p>
+                          </div>
+                        )}
+                        <div className="mt-3">
+                          <p className="text-gray-500 text-sm">Applied</p>
+                          <p className="text-gray-700 text-sm mt-1">
+                            {app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -26,13 +26,23 @@ def get_blogs_collection():
     return get_db().collection('blogs')
 
 
+def _serialize_timestamp(value):
+    if not value:
+        return None
+    if hasattr(value, 'isoformat'):
+        return value.isoformat()
+    return str(value)
+
+
 def user_to_dict(doc):
     if not doc:
         return None
     data = doc.to_dict()
+    if not data:
+        return None
     data['id'] = doc.id
-    data['created_at'] = data.get('created_at').isoformat() if data.get('created_at') else None
-    data['updated_at'] = data.get('updated_at').isoformat() if data.get('updated_at') else None
+    data['created_at'] = _serialize_timestamp(data.get('created_at'))
+    data['updated_at'] = _serialize_timestamp(data.get('updated_at'))
     return data
 
 
@@ -40,9 +50,11 @@ def job_to_dict(doc):
     if not doc:
         return None
     data = doc.to_dict()
+    if not data:
+        return None
     data['id'] = doc.id
-    data['created_at'] = data.get('created_at').isoformat() if data.get('created_at') else None
-    data['updated_at'] = data.get('updated_at').isoformat() if data.get('updated_at') else None
+    data['created_at'] = _serialize_timestamp(data.get('created_at'))
+    data['updated_at'] = _serialize_timestamp(data.get('updated_at'))
     return data
 
 
@@ -50,9 +62,11 @@ def application_to_dict(doc):
     if not doc:
         return None
     data = doc.to_dict()
+    if not data:
+        return None
     data['id'] = doc.id
-    data['applied_at'] = data.get('applied_at').isoformat() if data.get('applied_at') else None
-    data['updated_at'] = data.get('updated_at').isoformat() if data.get('updated_at') else None
+    data['applied_at'] = _serialize_timestamp(data.get('applied_at'))
+    data['updated_at'] = _serialize_timestamp(data.get('updated_at'))
     return data
 
 
@@ -60,9 +74,11 @@ def blog_to_dict(doc):
     if not doc:
         return None
     data = doc.to_dict()
+    if not data:
+        return None
     data['id'] = doc.id
-    data['created_at'] = data.get('created_at').isoformat() if data.get('created_at') else None
-    data['updated_at'] = data.get('updated_at').isoformat() if data.get('updated_at') else None
+    data['created_at'] = _serialize_timestamp(data.get('created_at'))
+    data['updated_at'] = _serialize_timestamp(data.get('updated_at'))
     return data
 
 
@@ -75,8 +91,13 @@ def create_user(user_data):
 
 
 def get_user_by_id(user_id):
-    doc = get_users_collection().document(user_id).get()
-    return user_to_dict(doc)
+    if not user_id:
+        return None
+    try:
+        doc = get_users_collection().document(user_id).get()
+        return user_to_dict(doc)
+    except Exception:
+        return None
 
 
 def get_user_by_email(email):
@@ -109,8 +130,13 @@ def create_job(job_data):
 
 
 def get_job_by_id(job_id):
-    doc = get_jobs_collection().document(job_id).get()
-    return job_to_dict(doc)
+    if not job_id:
+        return None
+    try:
+        doc = get_jobs_collection().document(job_id).get()
+        return job_to_dict(doc)
+    except Exception:
+        return None
 
 
 def get_jobs(filters=None, limit=100, offset=0):

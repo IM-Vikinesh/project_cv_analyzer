@@ -111,11 +111,15 @@ def get_job_applications(job_id):
                 if applicant:
                     app['applicant'] = {
                         'name': applicant.get('full_name'),
+                        'full_name': applicant.get('full_name'),
                         'email': applicant.get('email'),
                         'phone': applicant.get('phone'),
                         'skills': applicant.get('skills'),
                         'bio': applicant.get('bio'),
                         'location': applicant.get('location'),
+                        'resume_url': applicant.get('resume_url'),
+                        'experience': applicant.get('experience'),
+                        'education': applicant.get('education'),
                     }
         
         return jsonify({'success': True, 'applications': applications}), 200
