@@ -13,3 +13,5 @@ services:
         value: production
       - key: PYTHON_VERSION
         value: 3.11.11
+      - key: CORS_ORIGINS
+        value: https://job-nex-ai.vercel.app,http://localhost:3000
