@@ -221,6 +221,34 @@ def update_profile(user_id):
         return jsonify({'error': str(e)}), 500
 
 
+@auth_bp.route('/change-password/<user_id>', methods=['POST'])
+def change_password(user_id):
+    try:
+        init_firebase()
+        data = request.get_json()
+
+        current_password = data.get('current_password') or ''
+        new_password = data.get('new_password') or ''
+
+        user = get_user_by_id(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        if len(new_password) < 6:
+            return jsonify({'error': 'New password must be at least 6 characters'}), 400
+
+        if user.get('password'):
+            if not check_password_hash(user['password'], current_password):
+                return jsonify({'error': 'Current password is incorrect'}), 401
+
+        update_user(user_id, {'password': generate_password_hash(new_password)})
+
+        return jsonify({'success': True, 'message': 'Password updated successfully'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @auth_bp.route('/profile/<user_id>', methods=['DELETE'])
 def delete_profile(user_id):
     try:

@@ -5,11 +5,21 @@ import { useFileUpload } from '../hooks/useFileUpload';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
   const { uploading: uploadingImage, uploadProfileImage } = useFileUpload();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const isRecruiter = user?.role === 'recruiter';
+
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -53,6 +63,58 @@ const Profile = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handlePasswordChange = (e) => {
+    setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast.error('Please fill in all password fields');
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (passwordForm.currentPassword && passwordForm.currentPassword === passwordForm.newPassword) {
+      toast.error('New password must be different from current password');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await authAPI.changePassword(user.id, {
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword,
+      });
+      toast.success('Password changed successfully!');
+      setShowPasswordModal(false);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to change password');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    try {
+      await authAPI.deleteAccount(user.id);
+      toast.success('Your account has been deleted');
+      await logout();
+      window.location.href = '/';
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete account');
+      setDeleteLoading(false);
+    }
   };
 
   const handleImageClick = () => {
@@ -385,7 +447,11 @@ const Profile = () => {
                 <h4 className="font-medium text-gray-900">Change Password</h4>
                 <p className="text-sm text-gray-500">Update your account password</p>
               </div>
-              <button className="btn-outline text-sm">
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(true)}
+                className="btn-outline text-sm"
+              >
                 Change Password
               </button>
             </div>
@@ -394,13 +460,131 @@ const Profile = () => {
                 <h4 className="font-medium text-red-900">Delete Account</h4>
                 <p className="text-sm text-red-600">Permanently delete your account and data</p>
               </div>
-              <button className="px-4 py-2 border border-red-300 text-red-500 rounded-xl hover:bg-red-50 transition-colors text-sm">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="px-4 py-2 border border-red-300 text-red-500 rounded-xl hover:bg-red-50 transition-colors text-sm"
+              >
                 Delete Account
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="modal-card w-full max-w-md p-6 sm:p-8 animate-slide-up">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Change Password</h3>
+            <p className="text-sm text-gray-600 mb-6">Enter a new password for your account</p>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="input-field"
+                  placeholder="Enter current password"
+                  autoComplete="current-password"
+                />
+                <p className="text-xs text-gray-500 mt-1">Leave blank if you signed up with Google</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange}
+                  className="input-field"
+                  placeholder="At least 6 characters"
+                  autoComplete="new-password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordForm.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="input-field"
+                  placeholder="Re-enter new password"
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="btn-glow flex-1 flex items-center justify-center gap-2"
+                >
+                  {passwordLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Password'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="btn-outline"
+                  disabled={passwordLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="modal-card w-full max-w-md p-6 sm:p-8 animate-slide-up">
+            <h3 className="text-xl font-bold text-red-600 mb-2">Delete Account</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This action is <strong>permanent</strong> and cannot be undone. All your profile data,
+              applications, and saved information will be permanently deleted.
+            </p>
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl mb-6">
+              <p className="text-sm text-red-600 font-medium">
+                Are you sure you want to delete your account?
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {deleteLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Yes, Delete My Account'
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="btn-outline"
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

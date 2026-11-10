@@ -38,6 +38,8 @@ export const authAPI = {
   googleAuth: (data) => api.post('/auth/google', data),
   getProfile: (userId) => api.get(`/auth/profile/${userId}`),
   updateProfile: (userId, data) => api.put(`/auth/profile/${userId}`, data),
+  changePassword: (userId, data) => api.post(`/auth/change-password/${userId}`, data),
+  deleteAccount: (userId) => api.delete(`/auth/profile/${userId}`),
 };
 
 export const jobsAPI = {

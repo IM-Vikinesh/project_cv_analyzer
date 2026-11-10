@@ -98,6 +98,17 @@
     --glass-end: rgba(255, 255, 255, 0.04);
   }
 
+  .modal-card {
+    @apply bg-white rounded-2xl shadow-2xl border border-gray-200 text-gray-900;
+  }
+  .modal-card .input-field {
+    @apply bg-gray-50 border-gray-300 placeholder-gray-400 text-gray-900
+           focus:bg-white focus:border-primary-400;
+  }
+  .modal-card select.input-field option {
+    @apply text-gray-900 bg-white;
+  }
+
   .btn-primary {
     @apply relative overflow-hidden
            bg-primary-500 text-white px-6 py-3 rounded-xl font-semibold

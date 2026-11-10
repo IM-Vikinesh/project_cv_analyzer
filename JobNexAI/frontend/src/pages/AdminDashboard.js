@@ -409,40 +409,40 @@ const AdminDashboard = () => {
 
       {showJobModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="glass-strong rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-xl font-bold mb-4">{editId ? 'Edit Job' : 'Add Job'}</h3>
+          <div className="modal-card p-6 w-full max-w-lg">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">{editId ? 'Edit Job' : 'Add Job'}</h3>
             <div className="space-y-4">
               <input
                 type="text"
                 placeholder="Job Title"
                 value={formData.title || ''}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2"
               />
               <input
                 type="text"
                 placeholder="Company Name"
                 value={formData.company_name || ''}
                 onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2"
               />
               <textarea
                 placeholder="Description"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full border rounded px-3 py-2 h-24"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2 h-24"
               />
               <input
                 type="text"
                 placeholder="Location"
                 value={formData.location || ''}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2"
               />
               <select
                 value={formData.job_type || 'full-time'}
                 onChange={(e) => setFormData({ ...formData, job_type: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2"
               >
                 <option value="full-time">Full Time</option>
                 <option value="part-time">Part Time</option>
@@ -471,21 +471,21 @@ const AdminDashboard = () => {
 
       {showBlogModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="glass-strong rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-xl font-bold mb-4">{editId ? 'Edit Blog' : 'Add Blog'}</h3>
+          <div className="modal-card p-6 w-full max-w-lg">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">{editId ? 'Edit Blog' : 'Add Blog'}</h3>
             <div className="space-y-4">
               <input
                 type="text"
                 placeholder="Blog Title"
                 value={formData.title || ''}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2"
               />
               <textarea
                 placeholder="Content"
                 value={formData.content || ''}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                className="w-full border rounded px-3 py-2 h-32"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2 h-32"
               />
               <div>
                 <label className="block text-sm mb-1">Cover Image</label>
@@ -493,7 +493,7 @@ const AdminDashboard = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleFileUpload}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2"
                 />
                 {formData.image_url && (
                   <img src={formData.image_url} alt="Preview" className="mt-2 h-24 w-auto" />
@@ -502,7 +502,7 @@ const AdminDashboard = () => {
               <select
                 value={formData.status || 'draft'}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white px-3 py-2"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
