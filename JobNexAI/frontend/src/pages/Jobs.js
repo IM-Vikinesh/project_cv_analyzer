@@ -17,6 +17,12 @@ const Jobs = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
+    setFilters({
+      search: searchParams.get('search') || '',
+      job_type: searchParams.get('job_type') || '',
+      experience_level: searchParams.get('experience_level') || '',
+      location: searchParams.get('location') || '',
+    });
     fetchJobs();
   }, [searchParams]);
 
@@ -89,7 +95,7 @@ const Jobs = () => {
       'internship': 'bg-green-100 text-green-800',
       'remote': 'bg-teal-100 text-teal-800',
     };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+    return colors[type] || 'bg-white/30 text-gray-800';
   };
 
   const getExperienceColor = (level) => {
@@ -100,11 +106,11 @@ const Jobs = () => {
       'lead': 'bg-orange-100 text-orange-700',
       'executive': 'bg-red-100 text-red-700',
     };
-    return colors[level] || 'bg-gray-100 text-gray-700';
+    return colors[level] || 'bg-white/30 text-gray-700';
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] py-8 rounded-[2rem] mx-2 sm:mx-4">
+    <div className="min-h-screen bg-white/15 backdrop-blur-xl border border-white/40 py-8 rounded-[2rem] mx-2 sm:mx-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Find Your Dream Job</h1>

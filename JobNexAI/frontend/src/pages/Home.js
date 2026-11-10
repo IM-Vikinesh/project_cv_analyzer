@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { jobsAPI, blogsAPI, healthAPI, statsAPI } from '../services/api';
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const showAtsCard = user?.role === 'job_seeker';
   const [jobs, setJobs] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [stats, setStats] = useState(null);
@@ -46,32 +49,44 @@ const Home = () => {
   };
 
   const features = [
-    { title: 'AI Resume Analyzer', description: 'Upload your resume and get instant insights powered by advanced NLP technology.', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { title: 'ATS Score System', description: 'Know exactly how your resume performs with Applicant Tracking Systems.', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
-    { title: 'Smart Job Matching', description: 'Our AI matches your skills with the perfect job opportunities.', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
-    { title: 'AI Career Assistant', description: 'Get instant career guidance, CV tips, and interview prep anytime with our intelligent chatbot.', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
-    { title: 'Cover Letter Generator', description: 'Create professional cover letters tailored to each job application.', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
-    { title: 'AI Mock Interviews', description: 'Practice with AI-generated interview questions and get instant feedback.', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+    { title: 'AI Resume Analyzer', description: 'Upload your resume and get instant insights powered by advanced NLP technology.', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', link: '/cv-upload' },
+    { title: 'ATS Score System', description: 'Know exactly how your resume performs with Applicant Tracking Systems.', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', link: '/cv-upload' },
+    { title: 'Smart Job Matching', description: 'Our AI matches your skills with the perfect job opportunities.', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', link: '/recommendations' },
+    { title: 'AI Career Assistant', description: 'Get instant career guidance, CV tips, and interview prep anytime with our intelligent chatbot.', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', action: 'chatbot' },
+    { title: 'Cover Letter Generator', description: 'Create professional cover letters tailored to each job application.', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z', link: '/jobs' },
+    { title: 'AI Mock Interviews', description: 'Practice with AI-generated interview questions and get instant feedback.', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', link: '/ai-interview' },
   ];
+
+  const handleFeatureClick = (feature) => {
+    if (!user) {
+      toast.error('Please sign in first to use this feature.');
+      return;
+    }
+    if (feature.action === 'chatbot') {
+      window.dispatchEvent(new Event('open-chatbot'));
+      return;
+    }
+    if (feature.link) navigate(feature.link);
+  };
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-gray-950 via-[#0a0a1a] to-[#120a2a] overflow-hidden rounded-b-[2rem] sm:rounded-b-[3rem] mx-2 sm:mx-4">
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <div className="ambient-blob w-96 h-96 bg-accent-cyan/20 top-[-10%] left-[-5%] animate-drift" />
-          <div className="ambient-blob w-80 h-80 bg-accent-pink/20 bottom-[-5%] right-[-5%] animate-drift" style={{animationDelay: '2s'}} />
-          <div className="ambient-blob w-64 h-64 bg-accent-violet/15 top-[30%] right-[20%] animate-morph" />
+          <div className="ambient-blob w-96 h-96 bg-accent-cyan/25 top-[-10%] left-[-5%] animate-drift" />
+          <div className="ambient-blob w-80 h-80 bg-primary-400/20 bottom-[-5%] right-[-5%] animate-drift" style={{animationDelay: '2s'}} />
+          <div className="ambient-blob w-64 h-64 bg-accent-violet/10 top-[30%] right-[20%] animate-morph" />
           <div className="mesh-bg" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="animate-slide-up-fluid">
+          <div className={`grid ${showAtsCard ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} gap-8 lg:gap-12 items-center`}>
+            <div className={`animate-slide-up-fluid ${showAtsCard ? '' : 'max-w-2xl'}`}>
               <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-6 sm:mb-8">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm text-white font-medium">AI-Powered Career Platform</span>
+                <span className="text-sm text-primary-700 font-medium">AI-Powered Career Platform</span>
               </div>
-              <h1 className="relative text-[2rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-4 sm:mb-6">
+              <h1 className="relative text-[2rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-4 sm:mb-6">
                 <span className="relative inline-block">
                   Land Your
                   <div className="absolute -inset-4 bg-gradient-to-r from-accent-cyan/10 via-primary-500/10 to-accent-violet/10 rounded-3xl blur-2xl -z-10 animate-pulse-slow" />
@@ -84,7 +99,7 @@ const Home = () => {
                 <br />
                 <span>with AI</span>
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-6 sm:mb-8 max-w-xl leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 max-w-xl leading-relaxed">
                 Upload your resume, get AI-powered analysis, optimize for ATS, and discover perfect job matches tailored just for you.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -101,78 +116,45 @@ const Home = () => {
                       Get Started Free
                       <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </Link>
-                    <Link to="/login" className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 glass rounded-2xl font-semibold text-white hover:bg-white/15 transition-all duration-300 text-sm sm:text-base">
+                    <Link to="/login" className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 glass rounded-2xl font-semibold text-gray-800 hover:bg-white/80 transition-all duration-300 text-sm sm:text-base">
                       Sign In
                     </Link>
                   </>
                 )}
               </div>
               {!user && (
-                <div className="mt-4 sm:mt-6 flex items-center gap-2 text-xs sm:text-sm text-gray-400">
+                <div className="mt-4 sm:mt-6 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   <span>Sign up required to access all features</span>
                 </div>
               )}
             </div>
-            {user ? (
+            {showAtsCard && (
               <div className="flex items-center justify-center lg:justify-end">
                 <div className="relative w-full max-w-md">
                   <div className="w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 bg-gradient-to-br from-accent-cyan/20 via-primary-500/20 to-accent-pink/20 rounded-full blur-3xl absolute -top-10 right-0 animate-pulse-slow" />
-                  <div className="relative bg-gray-900/80 backdrop-blur-2xl rounded-2xl p-6 sm:p-8 border border-white/10 shadow-2xl shadow-accent-cyan/10">
+                  <div className="relative liquid-glass rounded-2xl p-6 sm:p-8">
                     <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent-cyan via-primary-500 to-accent-violet rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-accent-cyan/20 flex-shrink-0">
                         <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       </div>
                       <div>
-                        <p className="text-white font-bold text-base sm:text-lg">ATS Score Analysis</p>
-                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
+                        <p className="text-gray-900 font-bold text-base sm:text-lg">ATS Score Analysis</p>
+                        <p className="text-gray-500 text-xs sm:text-sm mt-0.5">
                           <span className="text-accent-cyan font-semibold">92%</span> optimized &mdash; great shape!
                         </p>
                       </div>
                     </div>
-                    <div className="w-full bg-white/10 rounded-full h-2.5 sm:h-3 mb-1">
+                    <div className="w-full bg-primary-500/10 rounded-full h-2.5 sm:h-3 mb-1">
                       <div className="bg-gradient-to-r from-accent-cyan via-primary-500 to-accent-pink h-2.5 sm:h-3 rounded-full shadow-lg shadow-accent-cyan/20 transition-all" style={{width: '92%'}} />
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-5 sm:mt-6">
                       {['Skills', 'Experience', 'Education', 'Format'].map((item) => (
-                        <div key={item} className="bg-white/[0.06] hover:bg-white/[0.10] backdrop-blur-sm rounded-xl p-3 sm:p-3.5 border border-white/[0.08] transition-all duration-200 group">
-                          <p className="text-gray-300 text-xs sm:text-sm font-medium group-hover:text-white transition-colors">{item}</p>
+                        <div key={item} className="bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl p-3 sm:p-3.5 border border-white/30 transition-all duration-200 group">
+                          <p className="text-gray-600 text-xs sm:text-sm font-medium group-hover:text-gray-900 transition-colors">{item}</p>
                           <div className="flex items-center gap-1.5 mt-1.5">
                             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-sm shadow-emerald-400/50" />
                             <p className="text-emerald-300 text-xs sm:text-sm font-semibold">Excellent</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center lg:justify-end">
-                <div className="relative w-full max-w-md">
-                  <div className="w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 bg-gradient-to-br from-accent-cyan/20 via-primary-500/20 to-accent-pink/20 rounded-full blur-3xl absolute -top-10 right-0 animate-pulse-slow" />
-                  <div className="relative bg-gray-900/80 backdrop-blur-2xl rounded-2xl p-6 sm:p-8 border border-white/10 shadow-2xl shadow-accent-cyan/10">
-                    <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent-cyan via-primary-500 to-accent-violet rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-accent-cyan/20 flex-shrink-0">
-                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      </div>
-                      <div>
-                        <p className="text-white font-bold text-base sm:text-lg">ATS Score Analysis</p>
-                        <p className="text-accent-cyan text-xs sm:text-sm mt-0.5 font-medium">
-                          Sign in to see your score &rarr;
-                        </p>
-                      </div>
-                    </div>
-                    <div className="w-full bg-white/10 rounded-full h-2.5 sm:h-3 mb-1 overflow-hidden">
-                      <div className="bg-gradient-to-r from-accent-cyan/30 via-primary-500/30 to-accent-pink/30 h-2.5 sm:h-3 rounded-full" style={{width: '60%'}} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-5 sm:mt-6">
-                      {['Skills', 'Experience', 'Education', 'Format'].map((item) => (
-                        <div key={item} className="bg-white/[0.04] rounded-xl p-3 sm:p-3.5 border border-white/[0.04]">
-                          <p className="text-gray-500 text-xs sm:text-sm font-medium">{item}</p>
-                          <div className="flex items-center gap-1.5 mt-1.5">
-                            <span className="w-1.5 h-1.5 bg-gray-600 rounded-full" />
-                            <p className="text-gray-500 text-xs sm:text-sm italic hidden sm:block">sign in</p>
                           </div>
                         </div>
                       ))}
@@ -186,7 +168,7 @@ const Home = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="bg-surface rounded-[2rem] mx-2 sm:mx-4">
+      <section>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           {stats ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -219,7 +201,7 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-surface rounded-[2rem] mx-2 sm:mx-4">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold text-accent-cyan uppercase tracking-wider">Features</span>
@@ -228,20 +210,25 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
             {features.map((feature, index) => (
-              <div key={index} className="bento-card-glass p-8 group hover:-translate-y-1 animate-tilt-in">
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleFeatureClick(feature)}
+                className="bento-card-glass p-8 group hover:-translate-y-1 animate-tilt-in text-left w-full cursor-pointer"
+              >
                 <div className="w-14 h-14 bg-gradient-to-br from-accent-cyan via-primary-500 to-accent-violet rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} /></svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">{feature.title}</h3>
                 <p className="text-gray-500 leading-relaxed">{feature.description}</p>
-              </div>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
       {/* Jobs Section */}
-      <section className="py-20 bg-white rounded-[2rem] mx-2 sm:mx-4">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12">
             <div>
@@ -267,12 +254,12 @@ const Home = () => {
                     </div>
                     <span className={`badge ${
                       job.job_type === 'remote' ? 'bg-green-100 text-green-700' : 
-                      job.job_type === 'full-time' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                      job.job_type === 'full-time' ? 'bg-blue-100 text-blue-700' : 'bg-white/30 text-gray-700'
                     }`}>{job.job_type}</span>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">{job.title}</h3>
                   <p className="text-gray-500 text-sm mb-4">{job.company}</p>
-                  <div className="flex items-center text-sm text-gray-400">
+                  <div className="flex items-center text-sm text-gray-500">
                     <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     {job.location || 'Remote'}
                   </div>
@@ -303,22 +290,22 @@ const Home = () => {
 
       {/* CTA Section for Non-Logged In Users */}
       {!user && (
-        <section className="relative py-24 overflow-hidden bg-gradient-to-br from-gray-950 via-[#0a0a1a] to-[#120a2a] rounded-[2rem] mx-2 sm:mx-4">
+        <section className="relative py-24 overflow-hidden">
           <div className="absolute inset-0">
             <div className="ambient-blob w-96 h-96 bg-accent-cyan/20 top-[-10%] right-[-5%] animate-drift" />
-            <div className="ambient-blob w-80 h-80 bg-accent-pink/20 bottom-[-10%] left-[-5%] animate-drift" style={{animationDelay: '2s'}} />
+            <div className="ambient-blob w-80 h-80 bg-primary-400/20 bottom-[-10%] left-[-5%] animate-drift" style={{animationDelay: '2s'}} />
             <div className="mesh-bg" />
           </div>
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 shimmer-text">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 shimmer-text">
               Ready to Transform Your Career?
             </h2>
-            <p className="text-xl text-gray-400 mb-4 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 mb-4 max-w-2xl mx-auto">
               Sign up to unlock AI resume analysis, ATS scoring, job matching, interview coaching, and more.
             </p>
             <div className="flex flex-wrap justify-center gap-3 mb-10">
               {['AI Resume Analysis', 'ATS Score Check', 'Smart Job Matching', 'Interview Prep', 'Career Roadmap', '24/7 AI Chatbot'].map((f) => (
-                <span key={f} className="px-4 py-2 glass rounded-full text-sm bg-white/5 text-white/80 border border-white/10">
+                <span key={f} className="px-4 py-2 glass rounded-full text-sm text-primary-700">
                   {f}
                 </span>
               ))}
@@ -327,13 +314,13 @@ const Home = () => {
               Create Free Account
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </Link>
-            <p className="mt-4 text-white/50 text-sm">No credit card required. Join 10,000+ users.</p>
+            <p className="mt-4 text-gray-500 text-sm">No credit card required. Join 10,000+ users.</p>
           </div>
         </section>
       )}
 
       {/* Blogs Section */}
-      <section className="py-20 bg-surface rounded-[2rem] mx-2 sm:mx-4">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12">
             <div>
@@ -363,7 +350,7 @@ const Home = () => {
                     <div className="p-6">
                       <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors line-clamp-2">{blog.title}</h3>
                       <p className="text-gray-500 text-sm mb-4 line-clamp-3">{blog.content?.replace(/<[^>]*>/g, '').substring(0, 150)}...</p>
-                      <div className="flex items-center text-sm text-gray-400">
+                      <div className="flex items-center text-sm text-gray-500">
                         <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         {new Date(blog.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                       </div>
@@ -383,7 +370,7 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 rounded-t-[2rem] sm:rounded-t-[3rem] mx-2 sm:mx-4">
+      <footer className="text-gray-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
@@ -391,48 +378,48 @@ const Home = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold">JN</span>
                 </div>
-                <span className="text-xl font-bold text-white">JobNex AI</span>
+                <span className="text-xl font-bold text-gray-900">JobNex AI</span>
               </div>
-              <p className="text-sm leading-relaxed text-gray-500">AI-powered job portal helping you land your dream career with smart tools and insights.</p>
+              <p className="text-sm leading-relaxed text-gray-600">AI-powered job portal helping you land your dream career with smart tools and insights.</p>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">For Job Seekers</h4>
+              <h4 className="text-gray-900 font-semibold mb-4">For Job Seekers</h4>
               <ul className="space-y-3 text-sm">
-                <li><Link to="/jobs" className="text-gray-400 hover:text-white transition-colors">Browse Jobs</Link></li>
-                <li><Link to="/cv-upload" className="text-gray-400 hover:text-white transition-colors">Resume AI Analysis</Link></li>
-                <li><Link to="/ai-interview" className="text-gray-400 hover:text-white transition-colors">AI Interview Prep</Link></li>
-                <li><Link to="/recommendations" className="text-gray-400 hover:text-white transition-colors">Job Matching</Link></li>
+                <li><Link to="/jobs" className="text-gray-600 hover:text-primary-600 transition-colors">Browse Jobs</Link></li>
+                <li><Link to="/cv-upload" className="text-gray-600 hover:text-primary-600 transition-colors">Resume AI Analysis</Link></li>
+                <li><Link to="/ai-interview" className="text-gray-600 hover:text-primary-600 transition-colors">AI Interview Prep</Link></li>
+                <li><Link to="/recommendations" className="text-gray-600 hover:text-primary-600 transition-colors">Job Matching</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">For Recruiters</h4>
+              <h4 className="text-gray-900 font-semibold mb-4">For Recruiters</h4>
               <ul className="space-y-3 text-sm">
-                <li><Link to="/register" className="text-gray-400 hover:text-white transition-colors">Post Jobs</Link></li>
-                <li><Link to="/recruiter" className="text-gray-400 hover:text-white transition-colors">Recruiter Dashboard</Link></li>
-                <li><Link to="/register" className="text-gray-400 hover:text-white transition-colors">Find Candidates</Link></li>
+                <li><Link to="/register" className="text-gray-600 hover:text-primary-600 transition-colors">Post Jobs</Link></li>
+                <li><Link to="/recruiter" className="text-gray-600 hover:text-primary-600 transition-colors">Recruiter Dashboard</Link></li>
+                <li><Link to="/register" className="text-gray-600 hover:text-primary-600 transition-colors">Find Candidates</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Company</h4>
+              <h4 className="text-gray-900 font-semibold mb-4">Company</h4>
               <ul className="space-y-3 text-sm">
-                <li><span className="text-gray-400 hover:text-white cursor-pointer transition-colors">About Us</span></li>
-                <li><span className="text-gray-400 hover:text-white cursor-pointer transition-colors">Privacy Policy</span></li>
-                <li><span className="text-gray-400 hover:text-white cursor-pointer transition-colors">Terms of Service</span></li>
-                <li><span className="text-gray-400 hover:text-white cursor-pointer transition-colors">Contact</span></li>
+                <li><span className="text-gray-600 hover:text-primary-600 cursor-pointer transition-colors">About Us</span></li>
+                <li><span className="text-gray-600 hover:text-primary-600 cursor-pointer transition-colors">Privacy Policy</span></li>
+                <li><span className="text-gray-600 hover:text-primary-600 cursor-pointer transition-colors">Terms of Service</span></li>
+                <li><span className="text-gray-600 hover:text-primary-600 cursor-pointer transition-colors">Contact</span></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-500">&copy; 2026 JobNex AI. All rights reserved.</p>
+          <div className="border-t border-white/40 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-600">&copy; 2026 JobNex AI. All rights reserved.</p>
             <div className="flex items-center gap-4">
-              <span className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors cursor-pointer">
-                <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" /></svg>
+              <span className="w-8 h-8 bg-white/30 rounded-lg flex items-center justify-center hover:bg-white/50 transition-colors cursor-pointer">
+                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" /></svg>
               </span>
-              <span className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors cursor-pointer">
-                <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0C.488 3.45.029 5.804 0 12c.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0C23.512 20.55 23.971 18.196 24 12c-.029-6.185-.484-8.549-4.385-8.816zM9 16V8l8 4-8 4z" /></svg>
+              <span className="w-8 h-8 bg-white/30 rounded-lg flex items-center justify-center hover:bg-white/50 transition-colors cursor-pointer">
+                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0C.488 3.45.029 5.804 0 12c.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0C23.512 20.55 23.971 18.196 24 12c-.029-6.185-.484-8.549-4.385-8.816zM9 16V8l8 4-8 4z" /></svg>
               </span>
-              <span className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors cursor-pointer">
-                <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+              <span className="w-8 h-8 bg-white/30 rounded-lg flex items-center justify-center hover:bg-white/50 transition-colors cursor-pointer">
+                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
               </span>
             </div>
           </div>

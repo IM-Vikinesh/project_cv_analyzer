@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -75,11 +75,19 @@ const AdminRoute = ({ children }) => {
 
 const AppRoutes = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const hideNavbar = location.pathname === '/login';
   const [chatOpen, setChatOpen] = useState(false);
+
+  useEffect(() => {
+    const openChat = () => setChatOpen(true);
+    window.addEventListener('open-chatbot', openChat);
+    return () => window.removeEventListener('open-chatbot', openChat);
+  }, []);
   
   return (
     <>
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
@@ -168,33 +176,45 @@ const AppRoutes = () => {
   );
 };
 
+const Shell = () => {
+  const location = useLocation();
+  const hideNavbar = location.pathname === '/login';
+
+  return (
+    <div className={`relative min-h-screen ${hideNavbar ? '' : 'pt-16 sm:pt-[4.5rem] md:pt-[5.5rem]'}`}>
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none bg-white/10 backdrop-blur-2xl" />
+      <div className="relative z-10">
+        <AppRoutes />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              style: {
+                background: '#059669',
+              },
+            },
+            error: {
+              style: {
+                background: '#dc2626',
+              },
+            },
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-surface pt-16 md:pt-20">
-          <AppRoutes />
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                style: {
-                  background: '#059669',
-                },
-              },
-              error: {
-                style: {
-                  background: '#dc2626',
-                },
-              },
-            }}
-          />
-        </div>
+        <Shell />
       </Router>
     </AuthProvider>
   );

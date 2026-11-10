@@ -274,7 +274,7 @@ const AIInterview = () => {
                 </p>
               </div>
               {msg.role === 'user' && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shadow-sm">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/30 flex items-center justify-center shadow-sm">
                   <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                 </div>
               )}

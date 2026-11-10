@@ -14,23 +14,66 @@ def get_all_jobs():
     try:
         init_firebase()
         
+        search = (request.args.get('search') or '').strip()
         job_type = request.args.get('job_type')
         experience_level = request.args.get('experience_level')
         location = request.args.get('location')
+        try:
+            page = max(int(request.args.get('page', 1)), 1)
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            per_page = max(int(request.args.get('per_page', 12)), 1)
+        except (TypeError, ValueError):
+            per_page = 12
         
         filters = {}
         if job_type:
             filters['job_type'] = job_type
         if experience_level:
             filters['experience_level'] = experience_level
-        if location:
-            filters['location'] = location
         
         filters['status'] = 'active'
         
-        jobs = get_jobs(filters=filters, limit=100)
+        jobs = get_jobs(filters=filters, limit=1000)
         
-        return jsonify({'success': True, 'jobs': jobs}), 200
+        if location:
+            location_lower = location.lower()
+            jobs = [j for j in jobs if location_lower in (j.get('location') or '').lower()]
+        
+        if search:
+            terms = search.lower().split()
+            
+            def matches(job):
+                haystack = ' '.join([
+                    str(job.get('title') or ''),
+                    str(job.get('company') or ''),
+                    str(job.get('company_name') or ''),
+                    str(job.get('description') or ''),
+                    str(job.get('requirements') or ''),
+                    str(job.get('skills_required') or ''),
+                    str(job.get('location') or ''),
+                    str(job.get('department') or ''),
+                    str(job.get('job_type') or ''),
+                    str(job.get('experience_level') or ''),
+                ]).lower()
+                return all(term in haystack for term in terms)
+            
+            jobs = [j for j in jobs if matches(j)]
+        
+        total = len(jobs)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_jobs = jobs[start:end]
+        pages = (total + per_page - 1) // per_page if total > 0 else 1
+        
+        return jsonify({
+            'success': True,
+            'jobs': paginated_jobs,
+            'total': total,
+            'pages': pages,
+            'current_page': page,
+        }), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500

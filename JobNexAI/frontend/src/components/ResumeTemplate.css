@@ -1,0 +1,250 @@
+/* =====================================
+   JOBNEXAI - PROFESSIONAL CV TEMPLATE
+   Reference-inspired minimalist design
+===================================== */
+
+.resume-page {
+  width: 100%;
+  max-width: 850px;
+  min-height: 1100px;
+  margin: 0 auto;
+  padding: 85px 75px 65px;
+  background: #ffffff;
+  color: #292929;
+  font-family: "Poppins", Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+/* HEADER */
+
+.resume-header {
+  text-align: center;
+  border-bottom: 1px solid #444;
+  padding-bottom: 12px;
+  margin-bottom: 21px;
+}
+
+.resume-name {
+  font-size: 39px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
+  color: #292929;
+}
+
+.resume-job-title {
+  font-size: 25px;
+  font-weight: 400;
+  margin: 3px 0 20px;
+  color: #292929;
+}
+
+.resume-contact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.resume-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #666666;
+  font-size: 15px;
+  min-width: 0;
+}
+
+.resume-contact-item svg {
+  flex-shrink: 0;
+  color: #292929;
+}
+
+/* SECTIONS */
+
+.resume-section {
+  border-bottom: 1px solid #444;
+  padding-bottom: 19px;
+  margin-bottom: 23px;
+}
+
+.resume-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.resume-section-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin: 0 0 10px;
+  color: #292929;
+  line-height: 1.4;
+}
+
+/* DESCRIPTION */
+
+.resume-description {
+  font-size: 15.5px;
+  line-height: 1.8;
+  font-weight: 400;
+  color: #292929;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* EDUCATION & EXPERIENCE */
+
+.resume-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+}
+
+.resume-entry {
+  width: 100%;
+}
+
+.resume-meta {
+  color: #777777;
+  font-size: 15.5px;
+  margin: 0 0 4px;
+  line-height: 1.5;
+}
+
+.resume-position {
+  font-size: 18px;
+  font-weight: 700;
+  color: #292929;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* SKILLS */
+
+.resume-skills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 25px;
+  row-gap: 4px;
+  padding-left: 27px;
+  margin: 9px 0 0;
+}
+
+.resume-skills li {
+  font-size: 15.5px;
+  line-height: 1.6;
+  padding-left: 2px;
+  color: #292929;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media screen and (max-width: 768px) {
+  .resume-page {
+    min-height: auto;
+    padding: 45px 35px;
+  }
+
+  .resume-name {
+    font-size: 30px;
+  }
+
+  .resume-job-title {
+    font-size: 20px;
+  }
+
+  .resume-contact {
+    justify-content: center;
+    gap: 12px 20px;
+  }
+
+  .resume-contact-item {
+    font-size: 13px;
+  }
+
+  .resume-section-title {
+    font-size: 21px;
+  }
+
+  .resume-description,
+  .resume-meta,
+  .resume-skills li {
+    font-size: 14px;
+  }
+
+  .resume-skills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .resume-page {
+    padding: 30px 22px;
+  }
+
+  .resume-name {
+    font-size: 25px;
+  }
+
+  .resume-job-title {
+    font-size: 17px;
+  }
+
+  .resume-contact {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .resume-section-title {
+    font-size: 19px;
+  }
+
+  .resume-skills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 10px;
+  }
+}
+
+/* PRINT / PDF */
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .resume-page {
+    width: 210mm;
+    max-width: none;
+    min-height: 297mm;
+    margin: 0;
+    padding: 20mm 21mm 16mm;
+    box-shadow: none;
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .resume-section,
+  .resume-entry {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .resume-page * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

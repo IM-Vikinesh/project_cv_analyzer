@@ -66,7 +66,7 @@ const Dashboard = () => {
       accepted: 'bg-green-100 text-green-800',
       rejected: 'bg-red-100 text-red-800',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-white/30 text-gray-800';
   };
 
   if (loading) {
@@ -159,7 +159,7 @@ const Dashboard = () => {
               <div className="divide-y divide-white/20">
                 {recentApplications.length > 0 ? (
                   recentApplications.map((app) => (
-                    <div key={app.id} className="p-4 hover:bg-gray-50">
+                    <div key={app.id} className="p-4 hover:bg-white/20">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="font-medium text-gray-900">
@@ -194,7 +194,7 @@ const Dashboard = () => {
               <div className="divide-y divide-white/20">
                 {recommendations.length > 0 ? (
                   recommendations.map((rec) => (
-                    <div key={rec.job?.id} className="p-4 hover:bg-gray-50">
+                    <div key={rec.job?.id} className="p-4 hover:bg-white/20">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900">{rec.job?.title}</h3>

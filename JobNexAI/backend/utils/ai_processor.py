@@ -510,6 +510,7 @@ def analyze_resume(cv_path):
         'organizations': organizations,
         'achievements': achievements,
         'summary': ai_summary,
+        '_raw_text': text,
     }
 
 

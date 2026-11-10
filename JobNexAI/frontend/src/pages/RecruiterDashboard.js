@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { jobsAPI, applicationsAPI } from '../services/api';
+import CoverLetterCard from '../components/CoverLetterCard';
 import toast from 'react-hot-toast';
 
 const RecruiterDashboard = () => {
@@ -164,15 +165,15 @@ const RecruiterDashboard = () => {
       accepted: 'bg-green-100 text-green-800',
       rejected: 'bg-red-100 text-red-800',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-white/30 text-gray-800';
   };
 
   const getJobStatusColor = (status) => {
-    return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+    return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-white/30 text-gray-800';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-transparent py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
@@ -191,29 +192,29 @@ const RecruiterDashboard = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="liquid-glass rounded-xl p-6">
             <p className="text-sm text-gray-600">Total Jobs</p>
             <p className="text-2xl font-bold text-gray-900">{jobs.length}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="liquid-glass rounded-xl p-6">
             <p className="text-sm text-gray-600">Active Jobs</p>
             <p className="text-2xl font-bold text-green-600">
               {jobs.filter(j => j.status === 'active').length}
             </p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="liquid-glass rounded-xl p-6">
             <p className="text-sm text-gray-600">Total Applications</p>
             <p className="text-2xl font-bold text-primary-600">
               {jobs.reduce((sum, j) => sum + (j.application_count || 0), 0)}
             </p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="liquid-glass rounded-xl p-6">
             <p className="text-sm text-gray-600">Views This Week</p>
             <p className="text-2xl font-bold text-secondary-600">-</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm">
+        <div className="liquid-glass rounded-xl">
           <div className="px-6 py-4 border-b">
             <h2 className="text-lg font-semibold text-gray-900">Your Job Postings</h2>
           </div>
@@ -225,7 +226,7 @@ const RecruiterDashboard = () => {
           ) : jobs.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-white/20">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
@@ -236,7 +237,7 @@ const RecruiterDashboard = () => {
                 </thead>
                 <tbody className="divide-y">
                   {jobs.map((job) => (
-                    <tr key={job.id} className="hover:bg-gray-50">
+                    <tr key={job.id} className="hover:bg-white/20">
                       <td className="px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900">{job.title}</p>
@@ -309,7 +310,7 @@ const RecruiterDashboard = () => {
 
       {showPostModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="glass-strong rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">
                 {selectedJob ? 'Edit Job' : 'Post New Job'}
@@ -477,7 +478,7 @@ const RecruiterDashboard = () => {
 
       {jobApplications.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="glass-strong rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">Applications</h2>
               <button onClick={() => { setJobApplications([]); setSelectedApplication(null); }} className="text-gray-400 hover:text-gray-600">
@@ -498,8 +499,8 @@ const RecruiterDashboard = () => {
                       <span className={`badge ${getStatusColor(app.status)}`}>{app.status}</span>
                     </div>
                     {app.cover_letter && (
-                      <div className="mb-3 p-3 bg-gray-50 rounded text-sm">
-                        <p className="text-gray-600">{app.cover_letter.substring(0, 200)}...</p>
+                      <div className="mb-3">
+                        <CoverLetterCard text={app.cover_letter} />
                       </div>
                     )}
                     <div className="flex gap-2 flex-wrap">
@@ -528,7 +529,7 @@ const RecruiterDashboard = () => {
                       </select>
                     </div>
                     {selectedApplication === app.id && (
-                      <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="mt-4 p-4 bg-white/20 rounded-lg border border-white/40">
                         <h4 className="font-semibold text-gray-900 mb-3">Applicant Details</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                           <div>
@@ -594,10 +595,7 @@ const RecruiterDashboard = () => {
                           </div>
                         )}
                         {app.cover_letter && (
-                          <div className="mt-3">
-                            <p className="text-gray-500 text-sm">Cover Letter</p>
-                            <p className="text-gray-700 text-sm mt-1 whitespace-pre-wrap">{app.cover_letter}</p>
-                          </div>
+                          <CoverLetterCard text={app.cover_letter} className="mt-3" />
                         )}
                         <div className="mt-3">
                           <p className="text-gray-500 text-sm">Applied</p>

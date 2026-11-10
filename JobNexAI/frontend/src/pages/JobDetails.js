@@ -164,7 +164,7 @@ const JobDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] py-8 rounded-[2rem] mx-2 sm:mx-4">
+    <div className="min-h-screen bg-white/15 backdrop-blur-xl border border-white/40 py-8 rounded-[2rem] mx-2 sm:mx-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Link to="/jobs" className="text-primary-600 hover:text-accent-cyan flex items-center gap-2">

@@ -36,11 +36,11 @@ const MessageBubble = ({ message }) => {
     const codeBlocks = [];
     html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
       const idx = codeBlocks.length;
-      codeBlocks.push(`<pre class="bg-gray-50 border border-gray-200 rounded-lg p-3 my-2 overflow-x-auto text-xs font-mono text-gray-800">${code.trim()}</pre>`);
+      codeBlocks.push(`<pre class="bg-white/30 border border-white/40 rounded-lg p-3 my-2 overflow-x-auto text-xs font-mono text-gray-800">${code.trim()}</pre>`);
       return `%%CODEBLOCK_${idx}%%`;
     });
 
-    html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-primary-700 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
+    html = html.replace(/`([^`]+)`/g, '<code class="bg-white/40 text-primary-700 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
 
     html = html.replace(/^### (.+)/gm, '<h3 class="text-base font-bold text-gray-900 mt-4 mb-1">$1</h3>');
     html = html.replace(/^## (.+)/gm, '<h2 class="text-lg font-bold text-gray-900 mt-5 mb-2">$1</h2>');
@@ -130,7 +130,7 @@ const MessageBubble = ({ message }) => {
         </div>
 
         {isUser && (
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shadow-sm mt-0.5">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/30 flex items-center justify-center shadow-sm mt-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />

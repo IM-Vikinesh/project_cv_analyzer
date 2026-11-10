@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import ResumeTemplate from '../components/ResumeTemplate';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
@@ -10,16 +11,18 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api
 const CVBuilder = () => {
   const { user, refreshUser } = useAuth();
   const previewRef = useRef(null);
+  const pdfRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [savingToCloud, setSavingToCloud] = useState(false);
   const [cvData, setCvData] = useState({
     name: user?.name || '',
+    jobTitle: '',
     email: user?.email || '',
     phone: user?.phone || '',
     location: user?.location || '',
     summary: '',
     experience: [{ title: '', company: '', duration: '', description: '' }],
-    education: [{ degree: '', institution: '', year: '' }],
+    education: [{ degree: '', institution: '', year: '', description: '' }],
     skills: user?.skills || '',
     languages: '',
     certifications: '',
@@ -58,7 +61,7 @@ const CVBuilder = () => {
   const addEducation = () => {
     setCvData(prev => ({
       ...prev,
-      education: [...prev.education, { degree: '', institution: '', year: '' }]
+      education: [...prev.education, { degree: '', institution: '', year: '', description: '' }]
     }));
   };
 
@@ -70,7 +73,10 @@ const CVBuilder = () => {
   };
 
   const generatePDFBlob = async () => {
-    const element = previewRef.current;
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+    const element = pdfRef.current || previewRef.current;
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -85,10 +91,14 @@ const CVBuilder = () => {
       format: 'a4'
     });
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
+    const imgWidth = canvas.width * ratio;
+    const imgHeight = canvas.height * ratio;
+    const offsetX = (pageWidth - imgWidth) / 2;
 
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(imgData, 'PNG', offsetX, 0, imgWidth, imgHeight);
 
     return pdf.output('blob');
   };
@@ -140,8 +150,40 @@ const CVBuilder = () => {
     }
   };
 
+  const splitList = (value) =>
+    (value || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  const templateData = {
+    personalInfo: {
+      fullName: cvData.name,
+      jobTitle: cvData.jobTitle,
+      phone: cvData.phone,
+      email: cvData.email,
+      address: cvData.location,
+    },
+    aboutMe: cvData.summary,
+    education: cvData.education.map((edu) => ({
+      institution: edu.institution,
+      duration: edu.year,
+      qualification: edu.degree,
+      description: edu.description,
+    })),
+    experience: cvData.experience.map((exp) => ({
+      company: exp.company,
+      duration: exp.duration,
+      position: exp.title,
+      description: exp.description,
+    })),
+    skills: splitList(cvData.skills),
+    languages: splitList(cvData.languages),
+    certifications: splitList(cvData.certifications),
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-transparent py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CV Builder</h1>
@@ -149,7 +191,7 @@ const CVBuilder = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="liquid-glass rounded-2xl p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Fill Your Information</h2>
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -196,6 +238,16 @@ const CVBuilder = () => {
                       onChange={(e) => handleChange('name', e.target.value)}
                       className="input-field"
                       placeholder="Christiano Ronaldo"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Professional Job Title</label>
+                    <input
+                      type="text"
+                      value={cvData.jobTitle}
+                      onChange={(e) => handleChange('jobTitle', e.target.value)}
+                      className="input-field"
+                      placeholder="Software Developer"
                     />
                   </div>
                   <div>
@@ -250,7 +302,7 @@ const CVBuilder = () => {
                   </button>
                 </div>
                 {cvData.experience.map((exp, index) => (
-                  <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <div key={index} className="mb-4 p-4 bg-white/20 rounded-lg border border-white/40">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <input
                         type="text"
@@ -301,7 +353,7 @@ const CVBuilder = () => {
                   </button>
                 </div>
                 {cvData.education.map((edu, index) => (
-                  <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <div key={index} className="mb-4 p-4 bg-white/20 rounded-lg border border-white/40">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <input
                         type="text"
@@ -322,8 +374,15 @@ const CVBuilder = () => {
                       type="text"
                       value={edu.year}
                       onChange={(e) => handleEducationChange(index, 'year', e.target.value)}
+                      className="input-field mb-3"
+                      placeholder="Duration (e.g., 2022 - 2026)"
+                    />
+                    <textarea
+                      value={edu.description}
+                      onChange={(e) => handleEducationChange(index, 'description', e.target.value)}
+                      rows={2}
                       className="input-field"
-                      placeholder="Year"
+                      placeholder="Subjects studied, achievements, or relevant coursework..."
                     />
                     {cvData.education.length > 1 && (
                       <button
@@ -374,95 +433,25 @@ const CVBuilder = () => {
           </div>
 
           <div className="lg:sticky lg:top-8 lg:h-fit">
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="liquid-glass rounded-2xl p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Live Preview</h2>
               
               <div
                 ref={previewRef}
-                className="bg-white border border-gray-200 rounded-lg shadow-lg"
-                style={{ fontFamily: 'Arial, sans-serif', minHeight: '900px', maxWidth: '600px', margin: '0 auto' }}
+                className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
               >
-                <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-8 text-white">
-                  <h1 className="text-3xl font-bold mb-2">{cvData.name || 'Your Name'}</h1>
-                  <div className="flex flex-wrap gap-4 text-sm opacity-90">
-                    {cvData.email && <span>✉ {cvData.email}</span>}
-                    {cvData.phone && <span>📞 {cvData.phone}</span>}
-                    {cvData.location && <span>📍 {cvData.location}</span>}
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  {cvData.summary && (
-                    <div className="mb-6">
-                      <h2 className="text-base font-bold text-slate-800 mb-2 uppercase tracking-wide border-b border-slate-300 pb-1">Professional Summary</h2>
-                      <p className="text-sm text-gray-600 mt-2 leading-relaxed">{cvData.summary}</p>
-                    </div>
-                  )}
-
-                  {cvData.experience.some(e => e.title || e.company) && (
-                    <div className="mb-6">
-                      <h2 className="text-base font-bold text-slate-800 mb-3 uppercase tracking-wide border-b border-slate-300 pb-1">Work Experience</h2>
-                      {cvData.experience.filter(e => e.title || e.company).map((exp, i) => (
-                        <div key={i} className="mb-4 mt-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-bold text-gray-900">{exp.title || 'Position'}</h3>
-                              <p className="text-sm text-primary-600 font-medium">{exp.company}</p>
-                            </div>
-                            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{exp.duration}</span>
-                          </div>
-                          {exp.description && (
-                            <p className="text-sm text-gray-600 mt-2 leading-relaxed">{exp.description}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {cvData.education.some(e => e.degree || e.institution) && (
-                    <div className="mb-6">
-                      <h2 className="text-base font-bold text-slate-800 mb-3 uppercase tracking-wide border-b border-slate-300 pb-1">Education</h2>
-                      {cvData.education.filter(e => e.degree || e.institution).map((edu, i) => (
-                        <div key={i} className="mb-3 mt-2">
-                          <div className="flex justify-between">
-                            <h3 className="font-bold text-gray-900">{edu.degree || 'Degree'}</h3>
-                            <span className="text-sm text-gray-500">{edu.year}</span>
-                          </div>
-                          <p className="text-sm text-primary-600">{edu.institution}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {cvData.skills && (
-                    <div className="mb-6">
-                      <h2 className="text-base font-bold text-slate-800 mb-3 uppercase tracking-wide border-b border-slate-300 pb-1">Skills</h2>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {cvData.skills.split(',').map((skill, i) => (
-                          <span key={i} className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
-                            {skill.trim()}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {cvData.languages && (
-                    <div className="mb-6">
-                      <h2 className="text-base font-bold text-slate-800 mb-3 uppercase tracking-wide border-b border-slate-300 pb-1">Languages</h2>
-                      <p className="text-sm text-gray-600 mt-2">{cvData.languages}</p>
-                    </div>
-                  )}
-
-                  {cvData.certifications && (
-                    <div>
-                      <h2 className="text-base font-bold text-slate-800 mb-3 uppercase tracking-wide border-b border-slate-300 pb-1">Certifications</h2>
-                      <p className="text-sm text-gray-600 mt-2">{cvData.certifications}</p>
-                    </div>
-                  )}
-                </div>
+                <ResumeTemplate data={templateData} />
               </div>
             </div>
+          </div>
+        </div>
+
+        <div
+          aria-hidden="true"
+          style={{ position: 'fixed', top: 0, left: '-10000px', width: '850px', pointerEvents: 'none' }}
+        >
+          <div ref={pdfRef} style={{ width: '850px', background: '#ffffff' }}>
+            <ResumeTemplate data={templateData} />
           </div>
         </div>
       </div>

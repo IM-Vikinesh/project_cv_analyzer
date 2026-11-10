@@ -167,7 +167,7 @@ const ChatWindow = ({ onClose }) => {
         </div>
       </div>
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50/30 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-4 py-4 bg-white/10 scrollbar-hide">
         {messages.map((msg, index) => {
           if (msg.role === 'system') {
             return (
@@ -186,7 +186,7 @@ const ChatWindow = ({ onClose }) => {
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center shadow-sm">
                 <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" /><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /></svg>
               </div>
-              <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
+              <div className="bg-white/40 border border-white/50 rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
                 <div className="flex gap-1">
                   <span className="w-2 h-2 bg-accent-cyan rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 bg-accent-cyan rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

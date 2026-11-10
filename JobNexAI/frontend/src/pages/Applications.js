@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { applicationsAPI } from '../services/api';
+import CoverLetterCard from '../components/CoverLetterCard';
 import toast from 'react-hot-toast';
 
 const Applications = () => {
@@ -90,7 +91,7 @@ const Applications = () => {
       accepted: 'bg-green-100 text-green-800 border-green-200',
       rejected: 'bg-red-100 text-red-800 border-red-200',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colors[status] || 'bg-white/30 text-gray-800 border-white/40';
   };
 
   const statusCounts = {
@@ -103,7 +104,7 @@ const Applications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] py-8 rounded-[2rem] mx-2 sm:mx-4">
+    <div className="min-h-screen bg-white/15 backdrop-blur-xl border border-white/40 py-8 rounded-[2rem] mx-2 sm:mx-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -204,13 +205,8 @@ const Applications = () => {
                 </div>
 
                 {app.cover_letter && (
-                  <div className="mt-4 pt-4 border-t border-white/20">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Cover Letter</h4>
-                    <p className="text-sm text-gray-600 bg-white/50 backdrop-blur-xl p-4 rounded-2xl border border-white/20">
-                      {app.cover_letter.length > 300
-                        ? `${app.cover_letter.substring(0, 300)}...`
-                        : app.cover_letter}
-                    </p>
+                  <div className="mt-5">
+                    <CoverLetterCard text={app.cover_letter} />
                   </div>
                 )}
 

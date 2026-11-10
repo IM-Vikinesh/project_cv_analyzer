@@ -59,12 +59,7 @@ def analyze_cv():
                 except:
                     pass
 
-        resume_text = ""
-        try:
-            from utils.ai_processor import extract_text_from_pdf
-            resume_text = extract_text_from_pdf(tmp_path)
-        except:
-            pass
+        resume_text = analysis_result.pop('_raw_text', '') or ''
 
         analysis_result['ats_score'] = None
         if resume_text.strip():

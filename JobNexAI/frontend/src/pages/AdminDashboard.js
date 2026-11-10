@@ -133,8 +133,8 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 rounded-[2rem] mx-2 sm:mx-4">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-white/15 backdrop-blur-xl border border-white/40 rounded-[2rem] mx-2 sm:mx-4">
+      <nav className="glass-strong rounded-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
@@ -148,40 +148,40 @@ const AdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-64 bg-white rounded-lg shadow p-4 h-fit">
+          <div className="w-full lg:w-64 liquid-glass rounded-lg p-4 h-fit">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'dashboard' ? 'bg-primary-500 text-white' : 'hover:bg-gray-50'}`}
+              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'dashboard' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
             >
               Dashboard
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'users' ? 'bg-primary-500 text-white' : 'hover:bg-gray-50'}`}
+              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'users' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
             >
               Users
             </button>
             <button
               onClick={() => setActiveTab('jobs')}
-              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'jobs' ? 'bg-primary-500 text-white' : 'hover:bg-gray-50'}`}
+              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'jobs' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
             >
               Jobs
             </button>
             <button
               onClick={() => setActiveTab('applications')}
-              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'applications' ? 'bg-primary-500 text-white' : 'hover:bg-gray-50'}`}
+              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'applications' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
             >
               Applications
             </button>
             <button
               onClick={() => setActiveTab('blogs')}
-              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'blogs' ? 'bg-primary-500 text-white' : 'hover:bg-gray-50'}`}
+              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'blogs' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
             >
               Blogs
             </button>
           </div>
 
-          <div className="flex-1 bg-white rounded-lg shadow p-6">
+          <div className="flex-1 liquid-glass rounded-lg p-6">
             {loading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -310,7 +310,7 @@ const AdminDashboard = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b bg-gray-50">
+                          <tr className="border-b bg-white/20">
                             <th className="text-left py-3 px-4">Job Title</th>
                             <th className="text-left py-3 px-4">Company</th>
                             <th className="text-left py-3 px-4">Applicant</th>
@@ -323,7 +323,7 @@ const AdminDashboard = () => {
                         </thead>
                         <tbody>
                           {applications.map((app) => (
-                            <tr key={app.id} className="border-b hover:bg-gray-50">
+                            <tr key={app.id} className="border-b hover:bg-white/20">
                               <td className="py-3 px-4 font-medium">{app.job_title}</td>
                               <td className="py-3 px-4">{app.company_name}</td>
                               <td className="py-3 px-4">{app.applicant_name}</td>
@@ -409,7 +409,7 @@ const AdminDashboard = () => {
 
       {showJobModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+          <div className="glass-strong rounded-lg p-6 w-full max-w-lg">
             <h3 className="text-xl font-bold mb-4">{editId ? 'Edit Job' : 'Add Job'}</h3>
             <div className="space-y-4">
               <input
@@ -471,7 +471,7 @@ const AdminDashboard = () => {
 
       {showBlogModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+          <div className="glass-strong rounded-lg p-6 w-full max-w-lg">
             <h3 className="text-xl font-bold mb-4">{editId ? 'Edit Blog' : 'Add Blog'}</h3>
             <div className="space-y-4">
               <input

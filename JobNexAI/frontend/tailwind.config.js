@@ -39,10 +39,10 @@ module.exports = {
           emerald: '#00E676',
         },
         surface: {
-          DEFAULT: '#f8f9fc',
+          DEFAULT: '#eef6ff',
           dark: '#0a0a0f',
           card: '#ffffff',
-          muted: '#f1f3f8',
+          muted: '#e7f0ff',
         },
       },
       backgroundImage: {

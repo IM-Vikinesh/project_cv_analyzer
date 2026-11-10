@@ -19,7 +19,7 @@ const InputGroup = ({ type, value, onChange, icon, label, name, focused, setFocu
         onChange={onChange}
         onFocus={() => setFocused(name)}
         onBlur={() => setFocused(null)}
-        className="w-full pl-11 pr-11 pt-5 pb-2 bg-gray-100/80 border border-gray-200 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-accent-cyan/40 rounded-xl focus:outline-none focus:ring-0 transition-all duration-200 placeholder-transparent"
+        className="w-full pl-11 pr-11 pt-5 pb-2 bg-white/25 border border-white/40 text-gray-900 placeholder-gray-500 focus:bg-white/40 focus:border-accent-cyan/40 rounded-xl focus:outline-none focus:ring-0 transition-all duration-200 placeholder-transparent"
         placeholder={label}
         required
       />
@@ -83,10 +83,9 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-5rem)] bg-gradient-to-br from-gray-950 via-[#0a0a1a] to-[#120a2a] flex items-center justify-center py-8 px-4 relative overflow-hidden rounded-[2rem] mx-2 sm:mx-4">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMwMEQ0RkYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-60" />
+    <div className="min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] md:min-h-[calc(100vh-5.5rem)] bg-white/15 backdrop-blur-md flex items-center justify-center py-8 px-4 relative overflow-hidden">
       <div className="ambient-blob w-96 h-96 bg-accent-cyan/20 top-0 -left-48" />
-      <div className="ambient-blob w-96 h-96 bg-accent-pink/20 bottom-0 -right-48" />
+      <div className="ambient-blob w-96 h-96 bg-primary-400/20 bottom-0 -right-48" />
       <div className="max-w-md w-full relative animate-scale-in">
         <div className="text-center mb-6">
           <Link to="/" className="inline-flex items-center space-x-3 group">
@@ -108,7 +107,7 @@ const Register = () => {
           <button
             onClick={handleGoogleSignup}
             disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl text-gray-700 font-medium transition-all duration-200 group mb-6 shadow-sm"
+            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white/30 border border-white/40 hover:bg-white/50 rounded-xl text-gray-700 font-medium transition-all duration-200 group mb-6 shadow-sm"
           >
             {googleLoading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
@@ -136,20 +135,20 @@ const Register = () => {
             <label className="block text-sm font-medium text-gray-600 mb-2">I am a...</label>
             <div className="grid grid-cols-2 gap-4">
               <button type="button" onClick={() => setFormData({ ...formData, role: 'job_seeker' })}
-                className={`p-4 rounded-2xl transition-all duration-200 ${formData.role === 'job_seeker' ? 'bento-card-glass border-accent-cyan/50' : 'bg-gray-100/80 border border-gray-200'}`}
+                className={`p-4 rounded-2xl transition-all duration-200 ${formData.role === 'job_seeker' ? 'bento-card-glass border-accent-cyan/50' : 'bg-white/20 border border-white/40'}`}
               >
                 <div className="text-center">
-                  <div className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${formData.role === 'job_seeker' ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-gray-200/80 text-gray-500'}`}>
+                  <div className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${formData.role === 'job_seeker' ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-white/30 text-gray-500'}`}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   </div>
                   <span className={`text-sm font-medium ${formData.role === 'job_seeker' ? 'text-accent-cyan' : 'text-gray-500'}`}>Job Seeker</span>
                 </div>
               </button>
               <button type="button" onClick={() => setFormData({ ...formData, role: 'recruiter' })}
-                className={`p-4 rounded-2xl transition-all duration-200 ${formData.role === 'recruiter' ? 'bento-card-glass border-accent-cyan/50' : 'bg-gray-100/80 border border-gray-200'}`}
+                className={`p-4 rounded-2xl transition-all duration-200 ${formData.role === 'recruiter' ? 'bento-card-glass border-accent-cyan/50' : 'bg-white/20 border border-white/40'}`}
               >
                 <div className="text-center">
-                  <div className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${formData.role === 'recruiter' ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-gray-200/80 text-gray-500'}`}>
+                  <div className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${formData.role === 'recruiter' ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-white/30 text-gray-500'}`}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                   </div>
                   <span className={`text-sm font-medium ${formData.role === 'recruiter' ? 'text-accent-cyan' : 'text-gray-500'}`}>Recruiter</span>

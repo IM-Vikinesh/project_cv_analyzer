@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,9 +8,12 @@ const Navbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const mobileMenuRef = useRef(null);
   const userMenuRef = useRef(null);
   const hamburgerRef = useRef(null);
+  const navScrollRef = useRef(null);
+  const [navScroll, setNavScroll] = useState({ left: false, right: false });
 
   useEffect(() => {
     setShowUserMenu(false);
@@ -34,6 +37,37 @@ const Navbar = () => {
     await logout();
     navigate('/');
   };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    navigate(q ? `/jobs?search=${encodeURIComponent(q)}` : '/jobs');
+    setIsOpen(false);
+    setShowUserMenu(false);
+  };
+
+  const updateNavScroll = useCallback(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setNavScroll({
+      left: el.scrollLeft > 4,
+      right: maxScroll > 4 && el.scrollLeft < maxScroll - 4,
+    });
+  }, []);
+
+  const scrollNav = (direction) => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * Math.max(el.clientWidth * 0.6, 180), behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    updateNavScroll();
+    const onResize = () => updateNavScroll();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [updateNavScroll, user, location.pathname]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -61,11 +95,11 @@ const Navbar = () => {
   const links = user?.role === 'admin' ? adminLinks : user?.role === 'recruiter' ? recruiterLinks : jobSeekerLinks;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/20 rounded-b-3xl">
+    <nav className="fixed top-2 left-2 right-2 sm:left-4 sm:right-4 z-50 glass-strong border border-white/20 rounded-3xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-14 sm:h-16 md:h-20">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group">
+          <div className="flex items-center min-w-0 flex-1">
+            <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group flex-shrink-0">
               <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-accent-cyan via-primary-500 to-accent-violet rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105">
                 <span className="text-white font-bold text-sm">JN</span>
               </div>
@@ -75,28 +109,71 @@ const Navbar = () => {
             </Link>
 
             {user && (
-              <div className="hidden lg:flex ml-10 space-x-1">
-                {links.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      isActive(link.path) ? 'text-primary-600 bg-primary-500/5' : 'text-gray-500 hover:text-primary-600'
-                    }`}
+              <div className="hidden lg:flex items-center ml-6 min-w-0">
+                {navScroll.left && (
+                  <button
+                    type="button"
+                    onClick={() => scrollNav(-1)}
+                    aria-label="Scroll navigation left"
+                    className="flex-shrink-0 mr-1 p-1.5 rounded-full text-gray-400 hover:text-primary-600 hover:bg-white/30 transition-colors"
                   >
-                    {link.label}
-                  </Link>
-                ))}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                )}
+                <div
+                  ref={navScrollRef}
+                  onScroll={updateNavScroll}
+                  className="flex items-center space-x-1 flex-1 min-w-0 overflow-x-auto scrollbar-hide scroll-smooth"
+                >
+                  {links.map((link) => (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActive(link.path) ? 'text-primary-600 bg-primary-500/5' : 'text-gray-500 hover:text-primary-600'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+                {navScroll.right && (
+                  <button
+                    type="button"
+                    onClick={() => scrollNav(1)}
+                    aria-label="Scroll navigation right"
+                    className="flex-shrink-0 ml-1 p-1.5 rounded-full text-gray-400 hover:text-primary-600 hover:bg-white/30 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                )}
               </div>
             )}
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
+            {user && (
+              <form onSubmit={handleSearch} className="hidden md:block mr-2 lg:mr-3">
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search jobs..."
+                    aria-label="Search jobs"
+                    className="w-40 lg:w-56 pl-9 pr-3 py-2 text-sm rounded-xl bg-white/70 border border-white/40 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-300 transition-all"
+                  />
+                </div>
+              </form>
+            )}
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl transition-all duration-200 hover:bg-gray-100"
+                  className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl transition-all duration-200 hover:bg-white/30"
                 >
                   <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-accent-cyan to-accent-violet text-white">
                     <span className="font-medium text-sm">
@@ -115,7 +192,7 @@ const Navbar = () => {
                   <div ref={userMenuRef} className="absolute right-0 mt-2 w-48 glass-strong rounded-2xl shadow-glass-xl py-2 z-50">
                     <Link
                       to="/profile"
-                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors"
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-white/30 hover:text-primary-600 transition-colors"
                       onClick={() => setShowUserMenu(false)}
                     >
                       Profile
@@ -123,7 +200,7 @@ const Navbar = () => {
                     {user.role === 'recruiter' && (
                       <Link
                         to="/recruiter"
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors"
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-white/30 hover:text-primary-600 transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
                         Recruiter Dashboard
@@ -174,7 +251,7 @@ const Navbar = () => {
       </div>
 
       {isOpen && (
-        <div ref={mobileMenuRef} className="lg:hidden glass-strong border-t border-white/20 shadow-xl">
+        <div ref={mobileMenuRef} className="lg:hidden glass-strong border-t border-white/20 rounded-b-3xl shadow-xl">
           {user && (
             <div className="px-4 pt-3 pb-2 border-b border-white/20">
               <div className="flex items-center space-x-3">
@@ -188,6 +265,21 @@ const Navbar = () => {
                   <p className="text-xs text-gray-500 capitalize">{user.role?.replace('_', ' ')}</p>
                 </div>
               </div>
+              <form onSubmit={handleSearch} className="mt-3">
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search jobs..."
+                    aria-label="Search jobs"
+                    className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-white/70 border border-white/40 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-300 transition-all"
+                  />
+                </div>
+              </form>
             </div>
           )}
           <div className="px-2 pt-2 pb-3 space-y-1">
@@ -198,7 +290,7 @@ const Navbar = () => {
                 className={`block px-3 py-2.5 rounded-xl text-base font-medium transition-colors ${
                   isActive(link.path)
                     ? 'text-primary-600 bg-primary-500/5'
-                    : 'text-gray-500 hover:text-primary-600 hover:bg-gray-50'
+                    : 'text-gray-500 hover:text-primary-600 hover:bg-white/30'
                 }`}
                 onClick={() => setIsOpen(false)}
               >
@@ -208,7 +300,7 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  className="block px-3 py-2.5 rounded-xl text-base font-medium text-gray-500 hover:text-primary-600 hover:bg-gray-50"
+                  className="block px-3 py-2.5 rounded-xl text-base font-medium text-gray-500 hover:text-primary-600 hover:bg-white/30"
                   onClick={() => setIsOpen(false)}
                 >
                   Sign In

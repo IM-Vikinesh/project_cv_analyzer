@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { jobsAPI, applicationsAPI } from '../services/api';
+import CoverLetterCard from '../components/CoverLetterCard';
 import toast from 'react-hot-toast';
 
 const RecruiterJobs = () => {
@@ -161,15 +162,15 @@ const RecruiterJobs = () => {
       accepted: 'bg-green-100 text-green-800',
       rejected: 'bg-red-100 text-red-800',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-white/30 text-gray-800';
   };
 
   const getJobStatusColor = (status) => {
-    return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+    return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-white/30 text-gray-800';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-transparent py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-2xl font-bold text-gray-900">My Jobs</h1>
@@ -184,7 +185,7 @@ const RecruiterJobs = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm">
+        <div className="liquid-glass rounded-xl">
           <div className="px-6 py-4 border-b">
             <h2 className="text-lg font-semibold text-gray-900">Your Job Postings</h2>
           </div>
@@ -196,7 +197,7 @@ const RecruiterJobs = () => {
           ) : jobs.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-white/20">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
@@ -207,7 +208,7 @@ const RecruiterJobs = () => {
                 </thead>
                 <tbody className="divide-y">
                   {jobs.map((job) => (
-                    <tr key={job.id} className="hover:bg-gray-50">
+                    <tr key={job.id} className="hover:bg-white/20">
                       <td className="px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900">{job.title}</p>
@@ -280,7 +281,7 @@ const RecruiterJobs = () => {
 
       {showPostModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="glass-strong rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">
                 {selectedJob ? 'Edit Job' : 'Post New Job'}
@@ -448,7 +449,7 @@ const RecruiterJobs = () => {
 
       {jobApplications.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="glass-strong rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">Applications</h2>
               <button onClick={() => setJobApplications([])} className="text-gray-400 hover:text-gray-600">
@@ -469,8 +470,8 @@ const RecruiterJobs = () => {
                       <span className={`badge ${getStatusColor(app.status)}`}>{app.status}</span>
                     </div>
                     {app.cover_letter && (
-                      <div className="mb-3 p-3 bg-gray-50 rounded text-sm">
-                        <p className="text-gray-600">{app.cover_letter.substring(0, 200)}...</p>
+                      <div className="mb-3">
+                        <CoverLetterCard text={app.cover_letter} />
                       </div>
                     )}
                     <div className="flex gap-2">

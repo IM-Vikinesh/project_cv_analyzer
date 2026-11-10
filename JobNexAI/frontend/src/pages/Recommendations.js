@@ -45,7 +45,7 @@ const Recommendations = () => {
   const getMatchColor = (score) => {
     if (score >= 80) return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' };
     if (score >= 60) return { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200' };
-    return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' };
+    return { bg: 'bg-white/30', text: 'text-gray-700', border: 'border-white/40' };
   };
 
   const getMatchLabel = (score) => {
@@ -55,7 +55,7 @@ const Recommendations = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-transparent py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Job Recommendations</h1>
@@ -63,7 +63,7 @@ const Recommendations = () => {
         </div>
 
         {userSkills.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <div className="liquid-glass rounded-xl p-6 mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Your Skills</h2>
             <div className="flex flex-wrap gap-2">
               {userSkills.map((skill, i) => (
@@ -89,7 +89,7 @@ const Recommendations = () => {
               return (
                 <div
                   key={index}
-                  className={`bg-white rounded-xl shadow-sm border-2 ${colors.border} overflow-hidden`}
+                  className={`liquid-glass rounded-xl border-2 ${colors.border} overflow-hidden`}
                 >
                   <div className="p-6">
                     <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center sm:justify-between mb-4">
@@ -145,7 +145,7 @@ const Recommendations = () => {
                               className={`text-sm px-3 py-1 rounded-full ${
                                 rec.matched_skills?.includes(skill.trim().toLowerCase())
                                   ? 'bg-green-100 text-green-700'
-                                  : 'bg-gray-100 text-gray-600'
+                                  : 'bg-white/30 text-gray-600'
                               }`}
                             >
                               {rec.matched_skills?.includes(skill.trim().toLowerCase()) && (
@@ -180,7 +180,7 @@ const Recommendations = () => {
             })}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white rounded-xl">
+          <div className="text-center py-16 liquid-glass rounded-xl">
             <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
