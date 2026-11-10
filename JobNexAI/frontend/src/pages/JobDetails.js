@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { jobsAPI, applicationsAPI, aiAPI } from '../services/api';
@@ -329,11 +330,20 @@ const JobDetails = () => {
         </div>
       </div>
 
-      {showApplyModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bento-card-glass max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-white/20">
-              <h2 className="text-xl font-bold">Apply for {job.title}</h2>
+      {showApplyModal && createPortal(
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="apply-modal-title"
+          onClick={() => setShowApplyModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200">
+              <h2 id="apply-modal-title" className="text-xl font-bold text-gray-900">Apply for {job.title}</h2>
               <p className="text-gray-600">{job.company_name || job.company}</p>
             </div>
             
@@ -346,7 +356,7 @@ const JobDetails = () => {
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
                   rows={8}
-                  className="input-field"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-400/30 transition-all resize-y"
                   placeholder="Write a cover letter or leave blank to generate one with AI..."
                 />
                 <button
@@ -377,7 +387,7 @@ const JobDetails = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-white/20 flex gap-4">
+            <div className="p-6 border-t border-gray-200 flex gap-4">
               <button
                 onClick={() => setShowApplyModal(false)}
                 className="flex-1 btn-ghost"
@@ -393,7 +403,8 @@ const JobDetails = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
