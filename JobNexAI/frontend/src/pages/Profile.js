@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { authAPI } from '../services/api';
+import { authAPI, invalidateApiCache } from '../services/api';
 import { useFileUpload } from '../hooks/useFileUpload';
 import toast from 'react-hot-toast';
 
@@ -13,8 +13,11 @@ const Profile = () => {
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [companyLoading, setCompanyLoading] = useState(false);
+  const [companyName, setCompanyName] = useState(user?.company_name || '');
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -58,6 +61,7 @@ const Profile = () => {
         facebook_url: user.facebook_url || '',
         role: user.role || 'job_seeker',
       });
+      setCompanyName(user.company_name || '');
     }
   }, [user]);
 
@@ -104,10 +108,35 @@ const Profile = () => {
     }
   };
 
+  const handleCompanyChange = async (e) => {
+    e.preventDefault();
+    const trimmedCompany = companyName.trim();
+    if (!trimmedCompany) {
+      toast.error('Company name is required');
+      return;
+    }
+
+    setCompanyLoading(true);
+    try {
+      await authAPI.updateProfile(user.id, { company_name: trimmedCompany });
+      await refreshUser();
+      invalidateApiCache('/stats');
+      invalidateApiCache('/jobs');
+      setCompanyName(trimmedCompany);
+      setShowCompanyModal(false);
+      toast.success('Company name updated successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update company name');
+    } finally {
+      setCompanyLoading(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
     try {
       await authAPI.deleteAccount(user.id);
+      invalidateApiCache('/stats');
       toast.success('Your account has been deleted');
       await logout();
       window.location.href = '/';
@@ -144,7 +173,13 @@ const Profile = () => {
     };
 
     if (isRecruiter) {
-      profileData.company_name = formData.company_name;
+      const trimmedCompany = formData.company_name.trim();
+      if (!trimmedCompany) {
+        toast.error('Company name is required for recruiters');
+        setLoading(false);
+        return;
+      }
+      profileData.company_name = trimmedCompany;
       profileData.position = formData.position;
       profileData.company_website = formData.company_website;
       profileData.linkedin_url = formData.linkedin_url;
@@ -159,6 +194,8 @@ const Profile = () => {
     try {
       await authAPI.updateProfile(user.id, profileData);
       await refreshUser();
+      invalidateApiCache('/stats');
+      invalidateApiCache('/jobs');
       toast.success('Profile updated successfully!');
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to update profile');
@@ -212,6 +249,14 @@ const Profile = () => {
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{formData.name}</h2>
               <p className="text-gray-600">{formData.email}</p>
+              {isRecruiter && formData.company_name && (
+                <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  {formData.company_name}
+                </p>
+              )}
               <span className={`badge mt-2 ${
                 formData.role === 'recruiter' 
                   ? 'bg-secondary-100 text-secondary-700' 
@@ -442,6 +487,24 @@ const Profile = () => {
         <div className="mt-8 bento-card-glass p-4 sm:p-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Actions</h3>
           <div className="space-y-4">
+            {isRecruiter && (
+              <div className="flex items-center justify-between p-4 glass rounded-xl">
+                <div>
+                  <h4 className="font-medium text-gray-900">Company</h4>
+                  <p className="text-sm text-gray-500">{formData.company_name || 'No company name set'}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCompanyName(formData.company_name || '');
+                    setShowCompanyModal(true);
+                  }}
+                  className="btn-outline text-sm"
+                >
+                  Change Company
+                </button>
+              </div>
+            )}
             <div className="flex items-center justify-between p-4 glass rounded-xl">
               <div>
                 <h4 className="font-medium text-gray-900">Change Password</h4>
@@ -489,7 +552,7 @@ const Profile = () => {
                   placeholder="Enter current password"
                   autoComplete="current-password"
                 />
-                <p className="text-xs text-gray-500 mt-1">Leave blank if you signed up with Google</p>
+                <p className="text-xs text-gray-500 mt-1">Leave blank if your account has no password set</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
@@ -535,6 +598,53 @@ const Profile = () => {
                   onClick={() => setShowPasswordModal(false)}
                   className="btn-outline"
                   disabled={passwordLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showCompanyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="modal-card w-full max-w-md p-6 sm:p-8 animate-slide-up">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Change Company</h3>
+            <p className="text-sm text-gray-600 mb-6">Update the company name shown on your profile.</p>
+            <form onSubmit={handleCompanyChange} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="input-field"
+                  placeholder="Your company name"
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={companyLoading}
+                  className="btn-glow flex-1 flex items-center justify-center gap-2"
+                >
+                  {companyLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Company'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCompanyModal(false)}
+                  className="btn-outline"
+                  disabled={companyLoading}
                 >
                   Cancel
                 </button>

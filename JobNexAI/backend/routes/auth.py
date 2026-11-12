@@ -3,9 +3,9 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.firebase_config import init_firebase, get_db
 from utils.firestore_db import (
-    create_user, get_user_by_id, get_user_by_email, update_user, delete_user
+    create_user, get_user_by_id, get_user_by_email, update_user, delete_user,
+    update_jobs_by_recruiter
 )
-from utils.firebase_auth import verify_firebase_token
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -27,6 +27,9 @@ def register():
             return jsonify({'error': 'Email already exists'}), 400
         
         role = data.get('role', 'job_seeker')
+        company_name = str(data.get('company_name') or '').strip()
+        if role == 'recruiter' and not company_name:
+            return jsonify({'error': 'Company name is required for recruiters'}), 400
         password = data.get('password', '')
         password_hash = generate_password_hash(password) if password else ''
         
@@ -41,7 +44,7 @@ def register():
             'skills': data.get('skills'),
             'experience': data.get('experience'),
             'education': data.get('education'),
-            'company_name': data.get('company_name'),
+            'company_name': company_name,
             'position': data.get('position'),
             'company_website': data.get('company_website'),
             'linkedin_url': data.get('linkedin_url'),
@@ -53,7 +56,7 @@ def register():
         
         return jsonify({
             'success': True,
-            'user': {'id': user_id, 'full_name': name, 'email': email, 'role': role}
+            'user': {'id': user_id, 'full_name': name, 'email': email, 'role': role, 'company_name': company_name}
         }), 201
     
     except Exception as e:
@@ -109,85 +112,6 @@ def login():
         return jsonify({'error': str(e)}), 500
 
 
-@auth_bp.route('/google', methods=['POST'])
-def google_auth():
-    try:
-        init_firebase()
-        data = request.get_json()
-        id_token = data.get('id_token')
-
-        if not id_token:
-            return jsonify({'error': 'ID token is required'}), 400
-
-        decoded_token, error = verify_firebase_token(id_token)
-        if error:
-            return jsonify({'error': f'Invalid token: {error}'}), 401
-
-        email = decoded_token.get('email')
-        name = decoded_token.get('name') or email.split('@')[0]
-        firebase_uid = decoded_token.get('uid')
-        photo_url = decoded_token.get('picture', '')
-
-        if not email:
-            return jsonify({'error': 'Email not available from token'}), 400
-
-        existing_user = get_user_by_email(email)
-        if existing_user:
-            user_data = {k: v for k, v in existing_user.items() if k != 'password'}
-            return jsonify({'success': True, 'user': user_data}), 200
-
-        user_data = {
-            'full_name': name,
-            'email': email,
-            'password': '',
-            'role': 'job_seeker',
-            'firebase_uid': firebase_uid,
-            'profile_image_url': photo_url,
-            'phone': '',
-            'location': '',
-            'bio': '',
-            'skills': '',
-            'experience': '',
-            'education': '',
-            'company_name': '',
-            'position': '',
-            'company_website': '',
-            'linkedin_url': '',
-            'twitter_url': '',
-            'facebook_url': ''
-        }
-
-        user_id = create_user(user_data)
-
-        return jsonify({
-            'success': True,
-            'user': {
-                'id': user_id,
-                'full_name': name,
-                'email': email,
-                'role': 'job_seeker',
-                'profile_image_url': photo_url,
-                'company_name': '',
-                'position': '',
-                'company_website': '',
-                'linkedin_url': '',
-                'twitter_url': '',
-                'facebook_url': '',
-                'phone': '',
-                'location': '',
-                'bio': '',
-                'skills': '',
-                'experience': '',
-                'education': '',
-            }
-        }), 201
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-
 @auth_bp.route('/profile/<user_id>', methods=['GET'])
 def get_profile(user_id):
     try:
@@ -212,7 +136,18 @@ def update_profile(user_id):
         user = get_user_by_id(user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
+
+        updated_role = data.get('role', user.get('role'))
+        if updated_role == 'recruiter':
+            company_name = str(data.get('company_name', user.get('company_name')) or '').strip()
+            if not company_name:
+                return jsonify({'error': 'Company name is required for recruiters'}), 400
+            data['company_name'] = company_name
+            update_jobs_by_recruiter(user_id, {
+                'company_name': company_name,
+                'company': company_name,
+            })
+
         updated_user = update_user(user_id, data)
         
         return jsonify({'success': True, 'user': updated_user}), 200

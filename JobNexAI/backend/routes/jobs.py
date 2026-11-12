@@ -2,11 +2,41 @@ import os
 from flask import Blueprint, request, jsonify
 from utils.firebase_config import init_firebase
 from utils.firestore_db import (
-    create_job, get_job_by_id, get_jobs, update_job, delete_job,
+    create_job, get_job_by_id, get_jobs, get_user_by_id, update_job, delete_job,
     toggle_saved_job, get_saved_job_ids, is_job_saved
 )
 
 jobs_bp = Blueprint('jobs', __name__)
+
+
+def _add_recruiter_company_names(jobs):
+    recruiter_companies = {}
+    for job in jobs:
+        company_name = (
+            str(job.get('company_name') or '').strip()
+            or str(job.get('company') or '').strip()
+        )
+        if company_name:
+            job['company_name'] = company_name
+            job['company'] = company_name
+            continue
+
+        recruiter_id = job.get('recruiter_id')
+        if not recruiter_id:
+            continue
+
+        if recruiter_id not in recruiter_companies:
+            recruiter = get_user_by_id(recruiter_id)
+            recruiter_companies[recruiter_id] = str(
+                recruiter.get('company_name') or ''
+            ).strip() if recruiter else ''
+
+        company_name = recruiter_companies[recruiter_id]
+        if company_name:
+            job['company_name'] = company_name
+            job['company'] = company_name
+
+    return jobs
 
 
 @jobs_bp.route('', methods=['GET'])
@@ -64,7 +94,7 @@ def get_all_jobs():
         total = len(jobs)
         start = (page - 1) * per_page
         end = start + per_page
-        paginated_jobs = jobs[start:end]
+        paginated_jobs = _add_recruiter_company_names(jobs[start:end])
         pages = (total + per_page - 1) // per_page if total > 0 else 1
         
         return jsonify({
@@ -96,7 +126,7 @@ def get_recruiter_jobs():
         
         start = (page - 1) * per_page
         end = start + per_page
-        paginated_jobs = all_jobs[start:end]
+        paginated_jobs = _add_recruiter_company_names(all_jobs[start:end])
         
         return jsonify({
             'success': True,
@@ -120,6 +150,8 @@ def get_job(job_id):
         
         if not job:
             return jsonify({'error': 'Job not found'}), 404
+
+        job = _add_recruiter_company_names([job])[0]
         
         user_id = request.headers.get('X-User-Id')
         if user_id:
@@ -155,7 +187,12 @@ def create_new_job():
         data = request.get_json()
         
         recruiter_id = request.headers.get('X-User-Id') or data.get('recruiter_id')
-        company_name = data.get('company_name') or data.get('company')
+        recruiter = get_user_by_id(recruiter_id) if recruiter_id else None
+        company_name = (
+            data.get('company_name')
+            or data.get('company')
+            or (recruiter.get('company_name') if recruiter else None)
+        )
         
         if not data.get('title') or not company_name:
             return jsonify({'error': 'title and company are required'}), 400
@@ -164,6 +201,7 @@ def create_new_job():
             'recruiter_id': recruiter_id,
             'title': data['title'],
             'company_name': company_name,
+            'company': company_name,
             'company_logo_url': data.get('company_logo_url'),
             'description': data.get('description'),
             'requirements': data.get('requirements'),
@@ -197,6 +235,11 @@ def update_existing_job(job_id):
         job = get_job_by_id(job_id)
         if not job:
             return jsonify({'error': 'Job not found'}), 404
+
+        company_name = data.get('company_name') or data.get('company')
+        if company_name:
+            data['company_name'] = company_name
+            data['company'] = company_name
         
         updated_job = update_job(job_id, data)
         

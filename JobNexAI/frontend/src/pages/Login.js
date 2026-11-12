@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { getDefaultRouteForRole, getSafeReturnTo } from '../utils/navigation';
 
-const InputGroup = ({ type, value, onChange, icon, label, name, focused, setFocused, rightElement }) => {
+const InputGroup = ({ type, value, onChange, icon, label, name, focused, setFocused, rightElement, autoComplete }) => {
   const isActive = focused === name || value;
   return (
     <div className="relative">
       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <svg className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-accent-cyan' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-accent-cyan' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           {icon}
         </svg>
       </div>
       <input
         type={type}
+        name={name}
         value={value}
         onChange={onChange}
         onFocus={() => setFocused(name)}
         onBlur={() => setFocused(null)}
+        autoComplete={autoComplete}
         className="w-full pl-11 pr-11 pt-5 pb-2 bg-white/25 border border-white/40 text-gray-900 placeholder-gray-500 focus:bg-white/40 focus:border-accent-cyan/40 rounded-xl focus:outline-none focus:ring-0 transition-all duration-200 placeholder-transparent"
         placeholder={label}
         required
@@ -28,7 +31,7 @@ const InputGroup = ({ type, value, onChange, icon, label, name, focused, setFocu
         {label}
       </label>
       {rightElement && (
-        <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+        <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
           {rightElement}
         </div>
       )}
@@ -45,21 +48,26 @@ const Login = () => {
   const [focused, setFocused] = useState(null);
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = getSafeReturnTo(searchParams.get('returnTo'));
+  const returnToQuery = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
 
   useEffect(() => {
-    if (user) { navigate('/dashboard', { replace: true }); }
-  }, [user, navigate]);
+    if (user) {
+      navigate(returnTo || getDefaultRouteForRole(user.role), { replace: true });
+    }
+  }, [user, navigate, returnTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
     try {
-      await login(email, password);
+      const signedInUser = await login(email, password, remember);
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate(returnTo || getDefaultRouteForRole(signedInUser?.role), { replace: true });
     } catch (error) {
-      toast.error(error.message || 'Login failed');
+      toast.error(error.response?.data?.error || error.message || 'Login failed');
     } finally { setLoading(false); }
   };
 
@@ -70,11 +78,11 @@ const Login = () => {
       <div className="max-w-md w-full relative animate-scale-in">
         <div className="glass-strong border-gray-200 shadow-glass-xl p-8 sm:p-10 rounded-2xl">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
             <p className="text-gray-500">Sign in to continue your career journey</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="on">
             <InputGroup
               type="email"
               value={email}
@@ -82,6 +90,7 @@ const Login = () => {
               icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />}
               label="Email Address"
               name="email"
+              autoComplete="email"
               focused={focused}
               setFocused={setFocused}
             />
@@ -92,14 +101,16 @@ const Login = () => {
               icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />}
               label="Password"
               name="password"
+              autoComplete="current-password"
               focused={focused}
               setFocused={setFocused}
               rightElement={
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                  tabIndex={-1}
+                  className="w-11 h-11 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 focus-visible:text-gray-700"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +147,7 @@ const Login = () => {
                 </div>
                 <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">Remember me</span>
               </label>
-              <Link to="/forgot-password" className="text-sm font-medium text-accent-cyan hover:text-accent-cyan/80">
+              <Link to={`/forgot-password${returnToQuery}`} className="text-sm font-medium text-accent-cyan hover:text-accent-cyan/80">
                 Forgot password?
               </Link>
             </div>
@@ -161,7 +172,7 @@ const Login = () => {
 
           <p className="mt-8 text-center text-sm text-gray-500">
             Don't have an account?{' '}
-            <Link to="/register" className="text-accent-cyan font-semibold hover:text-accent-cyan/80">Create one</Link>
+            <Link to={`/register${returnToQuery}`} className="text-accent-cyan font-semibold hover:text-accent-cyan/80">Create one</Link>
           </p>
         </div>
       </div>

@@ -1,88 +1,128 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { jobsAPI, applicationsAPI, aiAPI } from '../services/api';
+import useAsyncData from '../hooks/useAsyncData';
+import { JobDetailsSkeleton } from '../components/Skeletons';
+import { ErrorState, EmptyState } from '../components/StateMessage';
+import { formatJobSalary, getCompanyName } from '../utils/jobFormat';
 import toast from 'react-hot-toast';
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [job, setJob] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: job, status, error, retry } = useAsyncData(async (signal) => {
+    const response = await jobsAPI.getJob(id, { signal });
+    return response.data?.job || null;
+  }, [id]);
+
+  const [appliedOverride, setAppliedOverride] = useState(null);
+  const [appliedFromServer, setAppliedFromServer] = useState(null);
+  const [savedOverride, setSavedOverride] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [hasApplied, setHasApplied] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [matchScore, setMatchScore] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
   const [generatingCover, setGeneratingCover] = useState(false);
+  const modalRef = useRef(null);
+
+  const loginUrl = `/login?returnTo=${encodeURIComponent(`/jobs/${id}`)}`;
+  const userId = user?.id;
+  const userRole = user?.role;
+  const hasApplied = appliedOverride ?? appliedFromServer ?? job?.has_applied ?? false;
+  const isSaved = savedOverride ?? job?.is_saved ?? false;
+  const isJobSeeker = userRole === 'job_seeker';
 
   useEffect(() => {
-    fetchJob();
+    setAppliedOverride(null);
+    setAppliedFromServer(null);
+    setSavedOverride(null);
+    setShowApplyModal(false);
+    setCoverLetter('');
   }, [id]);
 
-  const fetchJob = async () => {
-    setLoading(true);
-    try {
-      const response = await jobsAPI.getJob(id);
-      if (response.data?.job) {
-        setJob(response.data.job);
-        setHasApplied(response.data.job.has_applied || false);
-        setIsSaved(response.data.job.is_saved || false);
-        
-        if (user?.role === 'job_seeker') {
-          fetchMatchScore();
-        }
-      }
-    } catch (error) {
-      toast.error('Failed to load job details');
-      navigate('/jobs');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!userId || userRole !== 'job_seeker' || !job?.id) {
+      setAppliedFromServer(null);
+      return undefined;
     }
-  };
 
-  const fetchMatchScore = async () => {
-    try {
-      const response = await aiAPI.matchJob(id);
-      if (response.data?.match_result) {
-        setMatchScore(response.data.match_result.score);
+    let active = true;
+    applicationsAPI.getUserApplications(userId)
+      .then((response) => {
+        if (!active) return;
+        const applications = response.data?.applications || [];
+        setAppliedFromServer(applications.some((application) => application.job_id === job.id));
+      })
+      .catch(() => {
+        if (active) setAppliedFromServer(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [userId, userRole, job?.id]);
+
+  useEffect(() => {
+    if (!showApplyModal) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setShowApplyModal(false);
       }
-    } catch (error) {
-      console.error('Error fetching match score:', error);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    modalRef.current?.focus();
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+    };
+  }, [showApplyModal]);
+
+  const openApplyModal = () => {
+    if (!user) {
+      navigate(loginUrl);
+      return;
     }
+    if (!isJobSeeker) {
+      toast.error('Only job seeker accounts can apply to jobs');
+      return;
+    }
+    if (hasApplied) {
+      toast('You have already applied to this job', { icon: 'ℹ️' });
+      return;
+    }
+    setShowApplyModal(true);
   };
 
   const handleApply = async () => {
     if (!user) {
-      toast.error('Please login to apply');
-      navigate('/login');
+      navigate(loginUrl);
       return;
     }
-
-    if (hasApplied) {
-      toast.error('You have already applied to this job');
-      return;
-    }
-
-    console.log('Applying with:', { applicant_id: user.id, job_id: job.id });
 
     setApplying(true);
     try {
-      const response = await applicationsAPI.createApplication({
+      await applicationsAPI.createApplication({
         applicant_id: user.id,
         job_id: job.id,
         cover_letter: coverLetter || undefined,
       });
-      console.log('Application response:', response.data);
       toast.success('Application submitted successfully!');
-      setHasApplied(true);
+      setAppliedOverride(true);
       setShowApplyModal(false);
-    } catch (error) {
-      console.error('Apply error:', error.response?.data || error.message);
-      toast.error(error.response?.data?.error || 'Failed to submit application');
+      setCoverLetter('');
+    } catch (requestError) {
+      toast.error(requestError.response?.data?.error || 'Failed to submit application');
     } finally {
       setApplying(false);
     }
@@ -90,29 +130,30 @@ const JobDetails = () => {
 
   const handleSaveJob = async () => {
     if (!user) {
-      toast.error('Please login to save jobs');
+      navigate(loginUrl);
+      return;
+    }
+    if (!isJobSeeker) {
+      toast.error('Only job seeker accounts can save jobs');
       return;
     }
 
+    setSaving(true);
     try {
-      await jobsAPI.saveJob(job.id);
-      setIsSaved(!isSaved);
-      toast.success(isSaved ? 'Job removed from saved' : 'Job saved!');
-    } catch (error) {
-      toast.error('Failed to save job');
+      const response = await jobsAPI.saveJob(job.id);
+      const nextSaved = response.data?.saved ?? !isSaved;
+      setSavedOverride(nextSaved);
+      toast.success(nextSaved ? 'Job saved!' : 'Job removed from saved');
+    } catch (requestError) {
+      toast.error(requestError.response?.data?.error || 'Failed to save job');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleGenerateCoverLetter = async () => {
     setGeneratingCover(true);
     try {
-      console.log('Generating cover letter with:', {
-        job_title: job.title,
-        company: job.company_name || job.company,
-        applicant_name: user?.name,
-        applicant_skills: user?.skills,
-      });
-      
       const response = await aiAPI.generateCoverLetter({
         job_title: job.title,
         company: job.company_name || job.company,
@@ -125,51 +166,82 @@ const JobDetails = () => {
         applicant_bio: user?.bio || '',
         applicant_location: user?.location || '',
       });
-      
-      console.log('Cover letter response:', response.data);
-      
+
       if (response.data?.cover_letter) {
         setCoverLetter(response.data.cover_letter);
         toast.success('Cover letter generated!');
       } else {
         toast.error('No cover letter returned');
       }
-    } catch (error) {
-      console.error('Cover letter error:', error.response?.data || error.message);
-      toast.error(error.response?.data?.error || 'Failed to generate cover letter');
+    } catch (requestError) {
+      toast.error(requestError.response?.data?.error || 'Failed to generate cover letter');
     } finally {
       setGeneratingCover(false);
     }
   };
 
-  const getMatchColor = (score) => {
-    if (score >= 70) return 'text-green-600 bg-green-100';
-    if (score >= 40) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
+  if (status === 'loading' || status === 'refreshing') {
+    return <JobDetailsSkeleton />;
+  }
 
-  if (loading) {
+  if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <ErrorState
+            title="We couldn't load this job"
+            message={error || 'The job listing may have been removed or is temporarily unavailable.'}
+            onRetry={retry}
+          />
+          <div className="text-center mt-6">
+            <Link to="/jobs" className="text-primary-600 hover:text-primary-700 font-medium">
+              Back to all jobs
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Job not found</p>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <EmptyState
+            title="Job not found"
+            message="This job may have been filled or removed. Browse other opportunities to find your next role."
+            action={
+              <Link to="/jobs" className="btn-primary inline-flex items-center justify-center">
+                Browse Jobs
+              </Link>
+            }
+          />
+        </div>
       </div>
     );
   }
 
+  const skills = Array.isArray(job.skills_required)
+    ? job.skills_required
+    : typeof job.skills_required === 'string'
+      ? job.skills_required.split(',')
+      : [];
+
+  const description = typeof job.description === 'object' ? job.description?.description || '' : job.description;
+  const requirements = typeof job.requirements === 'object' ? job.requirements?.description || '' : job.requirements;
+  const salary = formatJobSalary(job);
+  const benefits = typeof job.benefits === 'object' ? job.benefits?.description || '' : job.benefits;
+  const companyName = getCompanyName(job);
+
   return (
-    <div className="min-h-screen bg-white/15 backdrop-blur-xl border border-white/40 py-8 rounded-[2rem] mx-2 sm:mx-4">
+    <div className="min-h-screen py-8 rounded-[2rem] mx-2 sm:mx-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <Link to="/jobs" className="text-primary-600 hover:text-accent-cyan flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link
+            to="/jobs"
+            className="text-primary-600 hover:text-accent-cyan inline-flex items-center gap-2 min-h-[44px]"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to Jobs
@@ -177,20 +249,20 @@ const JobDetails = () => {
         </div>
 
         <div className="bento-card-glass overflow-hidden">
-          <div className="p-8">
+          <div className="p-5 sm:p-8">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
               <div className="flex items-start gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-accent-cyan/20 via-primary-500/20 to-accent-violet/20 rounded-2xl flex items-center justify-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-accent-cyan/20 via-primary-500/20 to-accent-violet/20 rounded-2xl flex items-center justify-center flex-shrink-0">
                   <span className="text-primary-600 font-bold text-3xl">
-                    {(job.company_name || job.company || 'C').charAt(0)}
+                    {companyName.charAt(0)}
                   </span>
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
-                  <p className="text-lg text-gray-600">{job.company_name || job.company}</p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                  <p className="text-lg text-gray-600">{companyName}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-sm text-gray-500">
                     <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       </svg>
                       {job.location || 'Remote'}
@@ -202,76 +274,107 @@ const JobDetails = () => {
               </div>
 
               <button
+                type="button"
                 onClick={handleSaveJob}
-                className={`p-2 rounded-lg ${isSaved ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
+                disabled={saving}
+                aria-label={isSaved ? 'Remove job from saved jobs' : 'Save this job'}
+                aria-pressed={isSaved}
+                className={`p-3 min-w-[44px] min-h-[44px] rounded-lg transition-colors disabled:opacity-60 ${
+                  isSaved
+                    ? 'text-red-500 bg-red-50'
+                    : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                }`}
               >
-                <svg className="w-6 h-6" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                {saving ? (
+                  <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-400 block" aria-hidden="true" />
+                ) : (
+                  <svg className="w-6 h-6" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                )}
               </button>
             </div>
 
-            {matchScore !== null && user?.role === 'job_seeker' && (
-              <div className={`mb-6 p-4 rounded-xl ${getMatchColor(matchScore)}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold">Your Match Score</h3>
-                    <p className="text-sm opacity-80">Based on your resume and skills</p>
-                  </div>
-                  <span className="text-3xl font-bold">{matchScore}%</span>
-                </div>
-              </div>
-            )}
-
             {hasApplied && (
-              <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-700">
+              <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-700" role="status">
                 You have already applied to this position
               </div>
             )}
 
-            <div className="flex gap-4 mb-8">
-              {user?.role === 'job_seeker' && !hasApplied && (
-                <button onClick={() => setShowApplyModal(true)} className="btn-glow flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+              {isJobSeeker && !hasApplied && (
+                <button type="button" onClick={openApplyModal} className="btn-glow flex-1 min-h-[44px]">
                   Apply Now
                 </button>
               )}
-              <button onClick={handleSaveJob} className="btn-outline">
-                {isSaved ? 'Saved' : 'Save Job'}
-              </button>
+              {!user && (
+                <button type="button" onClick={() => navigate(loginUrl)} className="btn-glow flex-1 min-h-[44px]">
+                  Sign in to Apply
+                </button>
+              )}
+              {(isJobSeeker || !user) && (
+                <button
+                  type="button"
+                  onClick={handleSaveJob}
+                  disabled={saving}
+                  className="btn-outline min-h-[44px]"
+                  aria-pressed={isSaved}
+                >
+                  {saving ? 'Saving…' : !user ? 'Sign in to Save' : isSaved ? 'Saved' : 'Save Job'}
+                </button>
+              )}
             </div>
 
-            <div className="space-y-8">
-              <section>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
-                <div className="prose text-gray-600 whitespace-pre-line">
-                  {typeof job.description === 'object' ? job.description.description || '' : job.description}
-                </div>
-              </section>
+            {!user && (
+              <p className="text-sm text-gray-600 mb-8" role="note">
+                <Link to={loginUrl} className="text-primary-600 hover:text-primary-700 font-medium">
+                  Sign in
+                </Link>{' '}
+                or{' '}
+                <Link
+                  to={`/register?returnTo=${encodeURIComponent(`/jobs/${id}`)}`}
+                  className="text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  create an account
+                </Link>{' '}
+                to apply and save jobs.
+              </p>
+            )}
 
-              {job.requirements && (
+            {user && !isJobSeeker && (
+              <p className="text-sm text-gray-600 mb-8" role="note">
+                You are signed in as a {user.role}. Only job seeker accounts can apply to or save jobs.
+              </p>
+            )}
+
+            <div className="space-y-8">
+              {description && (
+                <section>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
+                  <div className="prose text-gray-600 whitespace-pre-line">{description}</div>
+                </section>
+              )}
+
+              {requirements && (
                 <section>
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Requirements</h2>
-                  <div className="prose text-gray-600 whitespace-pre-line">
-                    {typeof job.requirements === 'object' ? job.requirements.description || '' : job.requirements}
-                  </div>
+                  <div className="prose text-gray-600 whitespace-pre-line">{requirements}</div>
                 </section>
               )}
 
-              {job.benefits && (
+              {benefits && (
                 <section>
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Benefits</h2>
-                  <div className="prose text-gray-600 whitespace-pre-line">
-                    {typeof job.benefits === 'object' ? job.benefits.description || '' : job.benefits}
-                  </div>
+                  <div className="prose text-gray-600 whitespace-pre-line">{benefits}</div>
                 </section>
               )}
 
-              {job.skills_required && (
+              {skills.length > 0 && (
                 <section>
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Required Skills</h2>
                   <div className="flex flex-wrap gap-2">
-                    {job.skills_required.split(',').map((skill, i) => (
-                      <span key={i} className="badge bg-primary-100 text-primary-700">
+                    {skills.filter(Boolean).map((skill, index) => (
+                      <span key={`${skill.trim()}-${index}`} className="badge bg-primary-100 text-primary-700">
                         {skill.trim()}
                       </span>
                     ))}
@@ -281,7 +384,7 @@ const JobDetails = () => {
 
               <section>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Details</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="glass rounded-xl p-4">
                     <p className="text-sm text-gray-500">Job Type</p>
                     <p className="font-medium capitalize">{job.job_type?.replace('-', ' ')}</p>
@@ -290,11 +393,11 @@ const JobDetails = () => {
                     <p className="text-sm text-gray-500">Experience Level</p>
                     <p className="font-medium capitalize">{job.experience_level}</p>
                   </div>
-                  {job.salary_min && (
+                  {salary && (
                     <div className="glass rounded-xl p-4">
                       <p className="text-sm text-gray-500">Salary Range</p>
                       <p className="font-medium">
-                        Rs. {job.salary_min?.toLocaleString()} - Rs. {job.salary_max?.toLocaleString()}
+                        {salary}
                       </p>
                     </div>
                   )}
@@ -307,19 +410,24 @@ const JobDetails = () => {
                 </div>
               </section>
 
-              {job.recruiter && (
+              {(companyName !== 'Company' || job.recruiter) && (
                 <section>
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">About the Company</h2>
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
                         <span className="text-primary-600 font-bold">
-                          {job.recruiter.name?.charAt(0) || 'C'}
+                          {companyName.charAt(0)}
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{job.recruiter.name}</p>
-                        <p className="text-sm text-gray-500">{job.recruiter.email}</p>
+                        <p className="font-medium text-gray-900">{companyName}</p>
+                        {job.recruiter?.name && (
+                          <p className="text-sm text-gray-500">{job.recruiter.name}</p>
+                        )}
+                        {job.recruiter?.email && (
+                          <p className="text-sm text-gray-500">{job.recruiter.email}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -333,45 +441,52 @@ const JobDetails = () => {
       {showApplyModal && createPortal(
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4 overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="apply-modal-title"
           onClick={() => setShowApplyModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto"
-            onClick={(e) => e.stopPropagation()}
+            ref={modalRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="apply-modal-title"
+            aria-describedby="apply-modal-description"
+            className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto outline-none"
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
-              <h2 id="apply-modal-title" className="text-xl font-bold text-gray-900">Apply for {job.title}</h2>
+              <h2 id="apply-modal-title" className="text-xl font-bold text-gray-900">
+                Apply for {job.title}
+              </h2>
               <p className="text-gray-600">{job.company_name || job.company}</p>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="cover-letter" className="block text-sm font-medium text-gray-700 mb-2">
                   Cover Letter (Optional)
                 </label>
                 <textarea
+                  id="cover-letter"
                   value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
+                  onChange={(event) => setCoverLetter(event.target.value)}
                   rows={8}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-400/30 transition-all resize-y"
-                  placeholder="Write a cover letter or leave blank to generate one with AI..."
+                  placeholder="Write a cover letter or generate one with AI..."
                 />
                 <button
+                  type="button"
                   onClick={handleGenerateCoverLetter}
                   disabled={generatingCover}
-                  className="mt-2 text-sm text-primary-600 hover:text-primary-500 flex items-center gap-2"
+                  className="mt-2 min-h-[44px] text-sm text-primary-600 hover:text-primary-500 inline-flex items-center gap-2 disabled:opacity-60"
                 >
                   {generatingCover ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                      Generating...
+                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600" aria-hidden="true" />
+                      Generating…
                     </>
                   ) : (
                     <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       Generate with AI
@@ -380,26 +495,32 @@ const JobDetails = () => {
                 </button>
               </div>
 
-              <div className="bg-blue-50/70 backdrop-blur-xl p-4 rounded-2xl border border-blue-200/50">
+              <div id="apply-modal-description" className="bg-blue-50/70 p-4 rounded-2xl border border-blue-200/50">
                 <p className="text-sm text-blue-700">
                   Your profile information will be shared with the employer.
                 </p>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex gap-4">
+            <div className="p-6 border-t border-gray-200 flex flex-col sm:flex-row gap-4">
               <button
+                type="button"
                 onClick={() => setShowApplyModal(false)}
-                className="flex-1 btn-ghost"
+                className="flex-1 btn-ghost min-h-[44px]"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleApply}
                 disabled={applying}
-                className="flex-1 btn-glow"
+                aria-busy={applying}
+                className="flex-1 btn-glow min-h-[44px] inline-flex items-center justify-center gap-2"
               >
-                {applying ? 'Submitting...' : 'Submit Application'}
+                {applying && (
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" aria-hidden="true" />
+                )}
+                {applying ? 'Submitting…' : 'Submit Application'}
               </button>
             </div>
           </div>

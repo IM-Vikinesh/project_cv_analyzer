@@ -104,7 +104,7 @@ const Applications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white/15 backdrop-blur-xl border border-white/40 py-8 rounded-[2rem] mx-2 sm:mx-4">
+    <div className="min-h-screen py-8 rounded-[2rem] mx-2 sm:mx-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">

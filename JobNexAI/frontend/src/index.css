@@ -7,6 +7,10 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
   body {
     @apply text-gray-900 antialiased;
     background-color: #eef6ff;
@@ -14,7 +18,12 @@
     background-attachment: fixed;
     background-repeat: no-repeat;
     min-height: 100vh;
-    scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  :where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid rgba(79, 70, 229, 0.8);
+    outline-offset: 2px;
   }
   * {
     @apply border-gray-200;
@@ -217,6 +226,32 @@
   .mesh-bg {
     @apply bg-mesh-gradient;
   }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.32);
+    border-radius: 0.5rem;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 100%
+    );
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @layer utilities {
@@ -267,4 +302,45 @@
 
 @media (max-width: 640px) {
   .p-responsive { padding-left: 1rem; padding-right: 1rem; }
+}
+
+@media (max-width: 768px) {
+  body,
+  .bg-app {
+    background-attachment: scroll;
+  }
+  .liquid-glass,
+  .glass,
+  .glass-strong,
+  .glass-card,
+  .bento-card,
+  .bento-card-glass {
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+  }
+  .animate-drift,
+  .animate-morph,
+  .animate-pulse-slow {
+    animation: none !important;
+  }
+  .ambient-blob {
+    filter: blur(48px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after {
+    animation: none;
+  }
 }

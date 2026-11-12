@@ -37,17 +37,21 @@ db, bucket = init_firebase()
 def get_stats():
     try:
         db = get_db()
-        users = len(list(db.collection('users').stream()))
+        user_docs = list(db.collection('users').stream())
+        users = len(user_docs)
         analyses = len(list(db.collection('ai_analysis').stream()))
         companies = set()
+        for doc in user_docs:
+            data = doc.to_dict()
+            if data.get('role') == 'recruiter':
+                comp = str(data.get('company_name') or '').strip()
+                if comp:
+                    companies.add(comp.casefold())
         active_jobs_count = 0
         for doc in db.collection('jobs').stream():
             data = doc.to_dict()
             if data.get('status') == 'active':
                 active_jobs_count += 1
-                comp = data.get('company')
-                if comp:
-                    companies.add(comp)
         return jsonify({
             'users': users,
             'resumes_analyzed': analyses,

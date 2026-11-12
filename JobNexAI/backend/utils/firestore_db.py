@@ -163,6 +163,18 @@ def delete_job(job_id):
     get_jobs_collection().document(job_id).delete()
 
 
+def update_jobs_by_recruiter(recruiter_id, data):
+    if not recruiter_id:
+        return 0
+
+    updated_at = datetime.now()
+    updated = 0
+    for doc in get_jobs_collection().where('recruiter_id', '==', recruiter_id).stream():
+        doc.reference.update({**data, 'updated_at': updated_at})
+        updated += 1
+    return updated
+
+
 def create_application(app_data):
     app_data['applied_at'] = datetime.now()
     app_data['updated_at'] = datetime.now()

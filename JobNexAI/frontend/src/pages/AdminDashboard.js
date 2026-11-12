@@ -9,10 +9,11 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [blogs, setBlogs] = useState([]);
-  const [stats, setStats] = useState({ users: 0, jobs: 0, applications: 0 });
+  const [stats, setStats] = useState({ users: 0, recruiters: 0, companies: 0, jobs: 0, applications: 0 });
   const [loading, setLoading] = useState(true);
   const [showJobModal, setShowJobModal] = useState(false);
   const [showBlogModal, setShowBlogModal] = useState(false);
@@ -40,6 +41,9 @@ const AdminDashboard = () => {
       } else if (activeTab === 'users') {
         const res = await adminAPI.getUsers();
         setUsers(res.data.users);
+      } else if (activeTab === 'companies') {
+        const res = await adminAPI.getUsers();
+        setCompanies(res.data.users.filter((u) => u.role === 'recruiter'));
       } else if (activeTab === 'jobs') {
         const res = await adminAPI.getJobs();
         setJobs(res.data.jobs);
@@ -67,6 +71,17 @@ const AdminDashboard = () => {
       loadData();
     } catch (err) {
       toast.error('Delete failed');
+    }
+  };
+
+  const handleRemoveCompany = async (recruiter) => {
+    if (!window.confirm(`Remove ${recruiter.company_name || 'this company'} from ${recruiter.full_name || 'this recruiter'}?`)) return;
+    try {
+      await adminAPI.updateUser(recruiter.id, { company_name: '' });
+      toast.success('Company removed');
+      loadData();
+    } catch (err) {
+      toast.error('Failed to remove company');
     }
   };
 
@@ -133,13 +148,13 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white/15 backdrop-blur-xl border border-white/40 rounded-[2rem] mx-2 sm:mx-4">
-      <nav className="glass-strong rounded-2xl">
+    <div className="min-h-screen py-8 rounded-[2rem] mx-2 sm:mx-4">
+      <nav className="bento-card-glass rounded-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
             <div className="flex items-center gap-4">
-              <span className="text-gray-600">Welcome, {user.full_name}</span>
+              <span className="text-gray-600">Welcome, {user.name || user.email}</span>
               <button onClick={logout} className="text-red-600 hover:text-red-700">Logout</button>
             </div>
           </div>
@@ -148,7 +163,7 @@ const AdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-64 liquid-glass rounded-lg p-4 h-fit">
+          <div className="w-full lg:w-64 bento-card-glass rounded-lg p-4 h-fit">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'dashboard' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
@@ -160,6 +175,12 @@ const AdminDashboard = () => {
               className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'users' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
             >
               Users
+            </button>
+            <button
+              onClick={() => setActiveTab('companies')}
+              className={`w-full text-left px-4 py-2 rounded mb-1 ${activeTab === 'companies' ? 'bg-primary-500 text-white' : 'hover:bg-white/20'}`}
+            >
+              Companies
             </button>
             <button
               onClick={() => setActiveTab('jobs')}
@@ -181,7 +202,7 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          <div className="flex-1 liquid-glass rounded-lg p-6">
+          <div className="flex-1 bento-card-glass rounded-lg p-6">
             {loading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -191,17 +212,25 @@ const AdminDashboard = () => {
                 {activeTab === 'dashboard' && (
                   <div>
                     <h2 className="text-2xl font-bold mb-6">Overview</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                       <div className="bg-blue-50 p-6 rounded-lg">
-                        <div className="text-3xl font-bold text-blue-600">{stats.users}</div>
+                        <div className="text-3xl font-bold text-blue-600">{stats.users || 0}</div>
                         <div className="text-gray-600">Total Users</div>
                       </div>
+                      <div className="bg-amber-50 p-6 rounded-lg">
+                        <div className="text-3xl font-bold text-amber-600">{stats.recruiters || 0}</div>
+                        <div className="text-gray-600">Recruiters</div>
+                      </div>
+                      <div className="bg-teal-50 p-6 rounded-lg">
+                        <div className="text-3xl font-bold text-teal-600">{stats.companies || 0}</div>
+                        <div className="text-gray-600">Registered Companies</div>
+                      </div>
                       <div className="bg-green-50 p-6 rounded-lg">
-                        <div className="text-3xl font-bold text-green-600">{stats.jobs}</div>
+                        <div className="text-3xl font-bold text-green-600">{stats.jobs || 0}</div>
                         <div className="text-gray-600">Total Jobs</div>
                       </div>
                       <div className="bg-purple-50 p-6 rounded-lg">
-                        <div className="text-3xl font-bold text-purple-600">{stats.applications}</div>
+                        <div className="text-3xl font-bold text-purple-600">{stats.applications || 0}</div>
                         <div className="text-gray-600">Applications</div>
                       </div>
                     </div>
@@ -252,6 +281,50 @@ const AdminDashboard = () => {
                       </tbody>
                     </table>
                     </div>
+                  </div>
+                )}
+
+                {activeTab === 'companies' && (
+                  <div>
+                    <h2 className="text-2xl font-bold mb-6">Companies</h2>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2">Company Name</th>
+                            <th className="text-left py-2">Recruiter Name</th>
+                            <th className="text-left py-2">Email</th>
+                            <th className="text-left py-2">Position</th>
+                            <th className="text-left py-2">Location</th>
+                            <th className="text-left py-2">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {companies.map((recruiter) => (
+                            <tr key={recruiter.id} className="border-b">
+                              <td className="py-2 font-medium">{recruiter.company_name || '—'}</td>
+                              <td className="py-2">{recruiter.full_name || '—'}</td>
+                              <td className="py-2">{recruiter.email || '—'}</td>
+                              <td className="py-2">{recruiter.position || '—'}</td>
+                              <td className="py-2">{recruiter.location || '—'}</td>
+                              <td className="py-2">
+                                <button
+                                  onClick={() => handleRemoveCompany(recruiter)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  Remove
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {companies.length === 0 && (
+                      <div className="text-center py-12 text-gray-500">
+                        No registered companies found
+                      </div>
+                    )}
                   </div>
                 )}
 

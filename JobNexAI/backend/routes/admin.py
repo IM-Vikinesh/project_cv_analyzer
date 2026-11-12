@@ -20,7 +20,17 @@ def get_dashboard():
     try:
         init_firebase()
         
-        users_count = len(list(get_users_collection().stream()))
+        user_docs = list(get_users_collection().stream())
+        users_count = len(user_docs)
+        recruiters_count = 0
+        companies = set()
+        for doc in user_docs:
+            data = doc.to_dict()
+            if data.get('role') == 'recruiter':
+                recruiters_count += 1
+                comp = str(data.get('company_name') or '').strip()
+                if comp:
+                    companies.add(comp.casefold())
         jobs_count = len(list(get_jobs_collection().stream()))
         applications_count = len(list(get_applications_collection().stream()))
         
@@ -28,6 +38,8 @@ def get_dashboard():
             'success': True,
             'stats': {
                 'users': users_count,
+                'recruiters': recruiters_count,
+                'companies': len(companies),
                 'jobs': jobs_count,
                 'applications': applications_count
             }

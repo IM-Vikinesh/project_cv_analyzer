@@ -16,7 +16,7 @@ const RecruiterDashboard = () => {
 
   const [formData, setFormData] = useState({
     title: '',
-    company: '',
+    company: user?.company_name || '',
     location: '',
     job_type: 'full-time',
     salary_min: '',
@@ -79,7 +79,7 @@ const RecruiterDashboard = () => {
   const resetForm = () => {
     setFormData({
       title: '',
-      company: '',
+      company: user?.company_name || '',
       location: '',
       job_type: 'full-time',
       salary_min: '',
@@ -98,7 +98,7 @@ const RecruiterDashboard = () => {
     setSelectedJob(job);
     setFormData({
       title: job.title,
-      company: job.company,
+      company: job.company_name || job.company || user?.company_name || '',
       location: job.location || '',
       job_type: job.job_type,
       salary_min: job.salary_min || '',
@@ -241,7 +241,7 @@ const RecruiterDashboard = () => {
                       <td className="px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900">{job.title}</p>
-                          <p className="text-sm text-gray-500">{job.company}</p>
+                          <p className="text-sm text-gray-500">{job.company_name || job.company || user?.company_name || '—'}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">

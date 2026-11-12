@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { blogsAPI } from '../services/api';
-import BlogContent, { getReadingMinutes } from '../components/BlogContent';
+import BlogContent from '../components/BlogContent';
+import { getReadingMinutes } from '../components/blogUtils';
+import useAsyncData from '../hooks/useAsyncData';
+import { BlogArticleSkeleton } from '../components/Skeletons';
+import { ErrorState, EmptyState } from '../components/StateMessage';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -16,41 +20,48 @@ const formatDate = (value) => {
 
 const BlogDetails = () => {
   const { blogId } = useParams();
-  const [blog, setBlog] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchBlog();
+  const { data: blog, status, error, retry } = useAsyncData(async (signal) => {
+    const response = await blogsAPI.getBlog(blogId, { signal });
+    return response.data?.blog || null;
   }, [blogId]);
 
-  const fetchBlog = async () => {
-    try {
-      const response = await blogsAPI.getBlog(blogId);
-      if (response.data?.blog) {
-        setBlog(response.data.blog);
-      }
-    } catch (error) {
-      console.error('Error fetching blog:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (status === 'loading' || status === 'refreshing') {
+    return <BlogArticleSkeleton />;
+  }
 
-  if (loading) {
+  if (status === 'error') {
     return (
-      <div className="min-h-screen flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-3xl mx-auto">
+          <ErrorState
+            title="We couldn't load this article"
+            message={error || 'The article may have been removed or is temporarily unavailable.'}
+            onRetry={retry}
+          />
+          <div className="text-center mt-6">
+            <Link to="/blogs" className="text-primary-600 hover:text-primary-700 font-medium min-h-[44px] inline-flex items-center">
+              Back to all articles
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!blog) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Article Not Found</h2>
-        <Link to="/blogs" className="text-primary-600 hover:text-primary-700">
-          Back to Articles
-        </Link>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-3xl mx-auto">
+          <EmptyState
+            title="Article not found"
+            message="This article may have been removed. Explore other career insights instead."
+            action={
+              <Link to="/blogs" className="btn-primary inline-flex items-center justify-center">
+                Back to Articles
+              </Link>
+            }
+          />
+        </div>
       </div>
     );
   }
@@ -63,9 +74,9 @@ const BlogDetails = () => {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link
           to="/blogs"
-          className="text-primary-600 hover:text-primary-700 inline-flex items-center mb-6 sm:mb-8 font-medium"
+          className="text-primary-600 hover:text-primary-700 inline-flex items-center mb-6 sm:mb-8 font-medium min-h-[44px]"
         >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Articles
@@ -77,6 +88,8 @@ const BlogDetails = () => {
               <img
                 src={blog.image_url}
                 alt={blog.title}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -88,7 +101,7 @@ const BlogDetails = () => {
                 Article
               </span>
               {publishedDate && <span>{publishedDate}</span>}
-              <span className="w-1 h-1 rounded-full bg-gray-300" />
+              <span className="w-1 h-1 rounded-full bg-gray-300" aria-hidden="true" />
               <span>{readingMinutes} min read</span>
             </div>
 
@@ -96,15 +109,15 @@ const BlogDetails = () => {
               {blog.title}
             </h1>
 
-            <div className="h-px w-full bg-white/40 my-6 sm:my-8" />
+            <div className="h-px w-full bg-white/40 my-6 sm:my-8" aria-hidden="true" />
 
             <BlogContent content={blog.content} />
           </div>
         </article>
 
         <div className="mt-10 flex justify-center">
-          <Link to="/blogs" className="btn-outline inline-flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link to="/blogs" className="btn-outline inline-flex items-center gap-2 min-h-[44px]">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to all articles

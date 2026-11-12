@@ -9,9 +9,12 @@ const api = axios.create({
   },
 });
 
+const getStoredUserId = () =>
+  localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
 api.interceptors.request.use(
   (config) => {
-    const userId = localStorage.getItem('userId');
+    const userId = getStoredUserId();
     if (userId) {
       config.headers['X-User-Id'] = userId;
     }
@@ -32,10 +35,84 @@ api.interceptors.response.use(
   }
 );
 
+const responseCache = new Map();
+const inFlightGets = new Map();
+const DEFAULT_CACHE_TTL = 60 * 1000;
+
+const buildCacheKey = (url, params) => {
+  const userId = getStoredUserId() || 'anonymous';
+  return `${url}|${JSON.stringify(params || {})}|${userId}`;
+};
+
+const createAbortError = () => {
+  const error = new Error('Request canceled');
+  error.name = 'AbortError';
+  error.code = 'ERR_CANCELED';
+  return error;
+};
+
+const attachAbort = (promise, signal) => {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(createAbortError());
+
+  return new Promise((resolve, reject) => {
+    const cleanup = () => signal.removeEventListener('abort', onAbort);
+    const onAbort = () => {
+      cleanup();
+      reject(createAbortError());
+    };
+
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(
+      (value) => {
+        cleanup();
+        resolve(value);
+      },
+      (error) => {
+        cleanup();
+        reject(error);
+      }
+    );
+  });
+};
+
+const cachedGet = (url, config = {}, ttl = DEFAULT_CACHE_TTL) => {
+  const { params, signal, ...rest } = config;
+  const key = buildCacheKey(url, params);
+  const now = Date.now();
+  const cached = responseCache.get(key);
+
+  if (cached && now - cached.timestamp < ttl) {
+    return Promise.resolve(cached.response);
+  }
+
+  if (inFlightGets.has(key)) {
+    return attachAbort(inFlightGets.get(key), signal);
+  }
+
+  const request = api
+    .get(url, { ...rest, params })
+    .then((response) => {
+      responseCache.set(key, { timestamp: Date.now(), response });
+      return response;
+    })
+    .finally(() => {
+      inFlightGets.delete(key);
+    });
+
+  inFlightGets.set(key, request);
+  return attachAbort(request, signal);
+};
+
+export const invalidateApiCache = (urlPrefix) => {
+  for (const key of responseCache.keys()) {
+    if (!urlPrefix || key.startsWith(urlPrefix)) responseCache.delete(key);
+  }
+};
+
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  googleAuth: (data) => api.post('/auth/google', data),
   getProfile: (userId) => api.get(`/auth/profile/${userId}`),
   updateProfile: (userId, data) => api.put(`/auth/profile/${userId}`, data),
   changePassword: (userId, data) => api.post(`/auth/change-password/${userId}`, data),
@@ -43,13 +120,25 @@ export const authAPI = {
 };
 
 export const jobsAPI = {
-  getJobs: (params) => api.get('/jobs', { params }),
-  getJob: (jobId) => api.get(`/jobs/${jobId}`),
-  createJob: (data) => api.post('/jobs', data),
-  updateJob: (jobId, data) => api.put(`/jobs/${jobId}`, data),
-  deleteJob: (jobId) => api.delete(`/jobs/${jobId}`),
-  getRecruiterJobs: (params) => api.get('/jobs/recruiter/jobs', { params }),
-  saveJob: (jobId) => api.post(`/jobs/${jobId}/save`),
+  getJobs: (params, config = {}) => cachedGet('/jobs', { ...config, params }, 45 * 1000),
+  getJob: (jobId, config = {}) => api.get(`/jobs/${jobId}`, config),
+  createJob: (data) => api.post('/jobs', data).then((res) => {
+    invalidateApiCache('/jobs');
+    return res;
+  }),
+  updateJob: (jobId, data) => api.put(`/jobs/${jobId}`, data).then((res) => {
+    invalidateApiCache('/jobs');
+    return res;
+  }),
+  deleteJob: (jobId) => api.delete(`/jobs/${jobId}`).then((res) => {
+    invalidateApiCache('/jobs');
+    return res;
+  }),
+  getRecruiterJobs: (params, config = {}) => api.get('/jobs/recruiter/jobs', { ...config, params }),
+  saveJob: (jobId) => api.post(`/jobs/${jobId}/save`).then((res) => {
+    invalidateApiCache('/jobs');
+    return res;
+  }),
 };
 
 export const applicationsAPI = {
@@ -82,8 +171,8 @@ export const healthAPI = {
 };
 
 export const blogsAPI = {
-  getBlogs: (params) => api.get('/blogs', { params }),
-  getBlog: (blogId) => api.get(`/blogs/${blogId}`),
+  getBlogs: (params, config = {}) => cachedGet('/blogs', { ...config, params }, 2 * 60 * 1000),
+  getBlog: (blogId, config = {}) => cachedGet(`/blogs/${blogId}`, config, 2 * 60 * 1000),
 };
 
 export const uploadAPI = {
@@ -128,7 +217,7 @@ export const adminAPI = {
 };
 
 export const statsAPI = {
-  getStats: () => api.get('/stats'),
+  getStats: (config = {}) => api.get('/stats', config),
 };
 
 export const chatbotAPI = {
