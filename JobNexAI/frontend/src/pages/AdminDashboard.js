@@ -360,7 +360,7 @@ const AdminDashboard = () => {
                                 onClick={() => { setEditId(job.id); setFormData(job); setShowJobModal(true); }}
                                 className="text-blue-600 mr-2"
                               >
-                                Edit
+                                
                               </button>
                               <button
                                 onClick={() => handleDelete('job', job.id)}
