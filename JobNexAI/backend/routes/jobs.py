@@ -142,6 +142,31 @@ def get_recruiter_jobs():
         return jsonify({'error': str(e)}), 500
 
 
+@jobs_bp.route('/saved', methods=['GET'])
+def get_saved_jobs():
+    try:
+        init_firebase()
+        user_id = request.headers.get('X-User-Id')
+
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+
+        saved_job_ids = get_saved_job_ids(user_id)
+        saved_jobs = [
+            job for job in (get_job_by_id(job_id) for job_id in saved_job_ids)
+            if job
+        ]
+
+        return jsonify({
+            'success': True,
+            'saved_job_ids': saved_job_ids,
+            'saved_jobs': saved_jobs,
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @jobs_bp.route('/<job_id>', methods=['GET'])
 def get_job(job_id):
     try:

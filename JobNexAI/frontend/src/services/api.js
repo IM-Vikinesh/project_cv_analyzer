@@ -135,6 +135,7 @@ export const jobsAPI = {
     return res;
   }),
   getRecruiterJobs: (params, config = {}) => api.get('/jobs/recruiter/jobs', { ...config, params }),
+  getSavedJobs: () => api.get('/jobs/saved'),
   saveJob: (jobId) => api.post(`/jobs/${jobId}/save`).then((res) => {
     invalidateApiCache('/jobs');
     return res;

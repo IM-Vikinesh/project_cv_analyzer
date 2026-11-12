@@ -10,6 +10,7 @@ const Applications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [expandedApplicantId, setExpandedApplicantId] = useState(null);
 
   useEffect(() => {
     fetchApplications();
@@ -71,15 +72,18 @@ const Applications = () => {
     }
   };
 
-  const handleWithdraw = async (appId) => {
-    if (!window.confirm('Are you sure you want to withdraw this application?')) return;
+  const handleDeleteApplication = async (appId) => {
+    const isRecruiter = user?.role === 'recruiter';
+    const action = isRecruiter ? 'delete this application' : 'withdraw this application';
+    if (!window.confirm(`Are you sure you want to ${action}?`)) return;
     
     try {
       await applicationsAPI.deleteApplication(appId);
-      toast.success('Application withdrawn');
+      toast.success(isRecruiter ? 'Application deleted' : 'Application withdrawn');
       setApplications(prev => prev.filter(app => app.id !== appId));
+      setExpandedApplicantId(null);
     } catch (error) {
-      toast.error('Failed to withdraw application');
+      toast.error(error.response?.data?.error || `Failed to ${isRecruiter ? 'delete' : 'withdraw'} application`);
     }
   };
 
@@ -182,20 +186,28 @@ const Applications = () => {
                     </span>
 
                     {user?.role === 'recruiter' ? (
-                      <select
-                        value={app.status}
-                        onChange={(e) => handleStatusUpdate(app.id, e.target.value)}
-                        className="input-field py-2 text-sm"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="interview">Interview</option>
-                        <option value="accepted">Accepted</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
+                      <>
+                        <select
+                          value={app.status}
+                          onChange={(e) => handleStatusUpdate(app.id, e.target.value)}
+                          className="input-field py-2 text-sm"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="reviewed">Reviewed</option>
+                          <option value="interview">Interview</option>
+                          <option value="accepted">Accepted</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                        <button
+                          onClick={() => handleDeleteApplication(app.id)}
+                          className="text-red-600 hover:text-red-700 text-sm font-medium bg-red-50/70 backdrop-blur-xl px-3 py-1.5 rounded-2xl border border-red-200/50"
+                        >
+                          Delete
+                        </button>
+                      </>
                     ) : (
                       <button
-                        onClick={() => handleWithdraw(app.id)}
+                        onClick={() => handleDeleteApplication(app.id)}
                         className="text-red-600 hover:text-red-700 text-sm font-medium bg-red-50/70 backdrop-blur-xl px-3 py-1.5 rounded-2xl border border-red-200/50"
                       >
                         Withdraw
@@ -219,27 +231,80 @@ const Applications = () => {
 
                 {user?.role === 'recruiter' && (app.applicant || app.applicant_name) && (
                   <div className="mt-4 pt-4 border-t border-white/20">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Applicant Info</h4>
-                    <div className="flex flex-wrap items-center gap-3 glass rounded-2xl p-3">
-                      <div className="w-10 h-10 bg-secondary-100 rounded-full flex items-center justify-center">
-                        <span className="text-secondary-600 font-medium">
-                          {(app.applicant?.name || app.applicant_name || 'A').charAt(0)}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedApplicantId(expandedApplicantId === app.id ? null : app.id)}
+                      aria-expanded={expandedApplicantId === app.id}
+                      className="w-full text-left"
+                    >
+                      <span className="text-sm font-medium text-gray-700 mb-2 block">Applicant Info</span>
+                      <span className="flex flex-wrap items-center gap-3 glass rounded-2xl p-3">
+                        <span className="w-10 h-10 bg-secondary-100 rounded-full flex items-center justify-center">
+                          <span className="text-secondary-600 font-medium">
+                            {(app.applicant?.name || app.applicant_name || 'A').charAt(0)}
+                          </span>
                         </span>
+                        <span>
+                          <span className="font-medium text-gray-900 block">{app.applicant?.name || app.applicant_name}</span>
+                          <span className="text-sm text-gray-500">{app.applicant?.email || app.applicant_email}</span>
+                        </span>
+                        {app.applicant?.skills && (
+                          <span className="ml-auto flex flex-wrap gap-1">
+                            {(Array.isArray(app.applicant.skills) ? app.applicant.skills : app.applicant.skills.split(',')).slice(0, 3).map((skill, i) => (
+                              <span key={i} className="text-xs bg-white/50 backdrop-blur-xl text-gray-600 px-2 py-1 rounded-lg border border-white/20">
+                                {skill.trim()}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                        <span className="text-primary-600 text-sm">{expandedApplicantId === app.id ? 'Hide details' : 'View details'}</span>
+                      </span>
+                    </button>
+                    {expandedApplicantId === app.id && (
+                      <div className="mt-3 glass rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        {[
+                          ['Full name', app.applicant?.full_name || app.applicant?.name || app.applicant_name],
+                          ['Email', app.applicant?.email || app.applicant_email],
+                          ['Phone', app.applicant?.phone],
+                          ['Location', app.applicant?.location],
+                          ['Skills', Array.isArray(app.applicant?.skills) ? app.applicant.skills.join(', ') : app.applicant?.skills],
+                          ['Experience', app.applicant?.experience],
+                          ['Education', app.applicant?.education],
+                        ].map(([label, value]) => value && (
+                          <div key={label}>
+                            <p className="text-gray-500">{label}</p>
+                            <p className="text-gray-800 whitespace-pre-wrap break-words">{value}</p>
+                          </div>
+                        ))}
+                        {app.applicant?.bio && (
+                          <div className="sm:col-span-2">
+                            <p className="text-gray-500">About</p>
+                            <p className="text-gray-800 whitespace-pre-wrap">{app.applicant.bio}</p>
+                          </div>
+                        )}
+                        {(app.resume_url || app.applicant?.resume_url) && (
+                          <a
+                            href={app.resume_url || app.applicant.resume_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-600 hover:text-primary-700"
+                          >
+                            View applicant resume
+                          </a>
+                        )}
+                        {['linkedin_url', 'twitter_url', 'facebook_url'].map((field) => app.applicant?.[field] && (
+                          <a
+                            key={field}
+                            href={app.applicant[field]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-600 hover:text-primary-700"
+                          >
+                            {field.replace('_url', '').replace('_', ' ')}
+                          </a>
+                        ))}
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{app.applicant?.name || app.applicant_name}</p>
-                        <p className="text-sm text-gray-500">{app.applicant?.email || app.applicant_email}</p>
-                      </div>
-                      {app.applicant?.skills && (
-                        <div className="ml-auto flex flex-wrap gap-1">
-                          {app.applicant.skills.split(',').slice(0, 3).map((skill, i) => (
-                            <span key={i} className="text-xs bg-white/50 backdrop-blur-xl text-gray-600 px-2 py-1 rounded-lg border border-white/20">
-                              {skill.trim()}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 )}
               </div>

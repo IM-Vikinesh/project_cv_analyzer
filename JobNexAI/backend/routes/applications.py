@@ -4,10 +4,33 @@ from utils.firestore_db import (
     create_application, get_application_by_id, 
     get_applications_by_job, get_applications_by_user,
     update_application, delete_application,
-    get_jobs, get_user_by_id
+    get_jobs, get_job_by_id, get_user_by_id
 )
 
 applications_bp = Blueprint('applications', __name__)
+
+
+def _get_applicant_info(applicant_id):
+    applicant = get_user_by_id(applicant_id)
+    if not applicant:
+        return None
+
+    return {
+        'name': applicant.get('full_name'),
+        'full_name': applicant.get('full_name'),
+        'email': applicant.get('email'),
+        'phone': applicant.get('phone'),
+        'location': applicant.get('location'),
+        'bio': applicant.get('bio'),
+        'skills': applicant.get('skills'),
+        'experience': applicant.get('experience'),
+        'education': applicant.get('education'),
+        'resume_url': applicant.get('resume_url'),
+        'linkedin_url': applicant.get('linkedin_url'),
+        'twitter_url': applicant.get('twitter_url'),
+        'facebook_url': applicant.get('facebook_url'),
+        'profile_image_url': applicant.get('profile_image_url'),
+    }
 
 
 @applications_bp.route('', methods=['POST'])
@@ -100,6 +123,15 @@ def get_user_applications(applicant_id):
 def get_job_applications(job_id):
     try:
         init_firebase()
+        recruiter_id = request.headers.get('X-User-Id')
+        if not recruiter_id:
+            return jsonify({'error': 'Authentication required'}), 401
+
+        job = get_job_by_id(job_id)
+        if not job:
+            return jsonify({'error': 'Job not found'}), 404
+        if job.get('recruiter_id') != recruiter_id:
+            return jsonify({'error': 'You are not allowed to view these applications'}), 403
         
         applications = get_applications_by_job(job_id)
         
@@ -107,20 +139,7 @@ def get_job_applications(job_id):
         for app in applications:
             applicant_id = app.get('applicant_id')
             if applicant_id:
-                applicant = get_user_by_id(applicant_id)
-                if applicant:
-                    app['applicant'] = {
-                        'name': applicant.get('full_name'),
-                        'full_name': applicant.get('full_name'),
-                        'email': applicant.get('email'),
-                        'phone': applicant.get('phone'),
-                        'skills': applicant.get('skills'),
-                        'bio': applicant.get('bio'),
-                        'location': applicant.get('location'),
-                        'resume_url': applicant.get('resume_url'),
-                        'experience': applicant.get('experience'),
-                        'education': applicant.get('education'),
-                    }
+                app['applicant'] = _get_applicant_info(applicant_id)
         
         return jsonify({'success': True, 'applications': applications}), 200
     
@@ -151,16 +170,7 @@ def get_recruiter_all_applications():
                 app['job'] = job
                 # Enrich with applicant info
                 if app.get('applicant_id'):
-                    applicant = get_user_by_id(app['applicant_id'])
-                    if applicant:
-                        app['applicant'] = {
-                            'name': applicant.get('full_name'),
-                            'email': applicant.get('email'),
-                            'phone': applicant.get('phone'),
-                            'skills': applicant.get('skills'),
-                            'bio': applicant.get('bio'),
-                            'location': applicant.get('location'),
-                        }
+                    app['applicant'] = _get_applicant_info(app['applicant_id'])
                 applications.append(app)
         
         print(f"Total applications for recruiter: {len(applications)}")
@@ -212,9 +222,18 @@ def update_app_status(app_id):
 def delete_app(app_id):
     try:
         init_firebase()
+        user_id = request.headers.get('X-User-Id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+
         application = get_application_by_id(app_id)
         if not application:
             return jsonify({'error': 'Application not found'}), 404
+
+        if application.get('applicant_id') != user_id:
+            job = get_job_by_id(application.get('job_id'))
+            if not job or job.get('recruiter_id') != user_id:
+                return jsonify({'error': 'You are not allowed to delete this application'}), 403
         
         delete_application(app_id)
         

@@ -157,6 +157,19 @@ const RecruiterDashboard = () => {
     }
   };
 
+  const deleteApplication = async (appId) => {
+    if (!window.confirm('Are you sure you want to delete this application?')) return;
+
+    try {
+      await applicationsAPI.deleteApplication(appId);
+      setJobApplications(prev => prev.filter(app => app.id !== appId));
+      setSelectedApplication(null);
+      toast.success('Application deleted');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete application');
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -527,6 +540,13 @@ const RecruiterDashboard = () => {
                         <option value="accepted">Accepted</option>
                         <option value="rejected">Rejected</option>
                       </select>
+                      <button
+                        type="button"
+                        onClick={() => deleteApplication(app.id)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Delete
+                      </button>
                     </div>
                     {selectedApplication === app.id && (
                       <div className="mt-4 p-4 bg-white/20 rounded-lg border border-white/40">

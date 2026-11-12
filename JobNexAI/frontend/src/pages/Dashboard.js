@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { jobsAPI, applicationsAPI } from '../services/api';
+import { formatJobSalary, getCompanyName } from '../utils/jobFormat';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
@@ -12,7 +13,7 @@ const Dashboard = () => {
     profileViews: 0,
     matchScore: 0,
   });
-  const [recentJobs, setRecentJobs] = useState([]);
+  const [favoriteJobs, setFavoriteJobs] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,19 +24,24 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [jobsRes, appsRes, recRes] = await Promise.all([
-        jobsAPI.getJobs({ per_page: 5 }),
+      const [appsRes, savedJobsRes, recRes] = await Promise.all([
         applicationsAPI.getMyApplications({ per_page: 5 }),
+        jobsAPI.getSavedJobs(),
         getRecommendations()
       ]);
 
-      if (jobsRes.data) {
-        setRecentJobs(jobsRes.data.jobs || []);
-      }
-
       if (appsRes.data) {
         setRecentApplications(appsRes.data.applications || []);
-        setStats(prev => ({ ...prev, applications: appsRes.data.total || 0 }));
+        setStats(prev => ({ ...prev, applications: (appsRes.data.applications || []).length }));
+      }
+
+      if (savedJobsRes.data) {
+        const savedJobs = savedJobsRes.data.saved_jobs || [];
+        setFavoriteJobs(savedJobs);
+        setStats(prev => ({
+          ...prev,
+          savedJobs: savedJobsRes.data.saved_job_ids?.length ?? savedJobs.length
+        }));
       }
 
       if (recRes?.data) {
@@ -151,7 +157,9 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-8">
             <div className="bento-card-glass overflow-hidden">
               <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-gray-900">Recent Applications</h2>
+                <Link to="/applications" className="text-lg font-semibold text-gray-900 hover:text-primary-600">
+                  Recent Applications
+                </Link>
                 <Link to="/applications" className="text-primary-600 text-sm hover:text-primary-500">
                   View All
                 </Link>
@@ -178,6 +186,56 @@ const Dashboard = () => {
                     <p className="text-gray-500 mb-4">No applications yet</p>
                     <Link to="/jobs" className="btn-primary">
                       Find Jobs
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bento-card-glass overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-900">Favorite Jobs</h2>
+                <Link to="/jobs" className="text-primary-600 text-sm hover:text-primary-500">
+                  View All
+                </Link>
+              </div>
+              <div className="divide-y divide-white/20">
+                {favoriteJobs.length > 0 ? (
+                  favoriteJobs.map((job) => {
+                    const company = getCompanyName(job);
+                    const salary = formatJobSalary(job);
+
+                    return (
+                      <Link
+                        key={job.id}
+                        to={`/jobs/${job.id}`}
+                        className="block p-4 hover:bg-white/20 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span className="text-primary-600 font-semibold">{company.charAt(0)}</span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-medium text-gray-900">{job.title}</h3>
+                            <p className="text-sm text-gray-600">{company}</p>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-500">
+                              <span>{job.location || 'Remote'}</span>
+                              {job.job_type && <span className="capitalize">{job.job_type.replace('-', ' ')}</span>}
+                              {salary && <span>{salary}</span>}
+                            </div>
+                            {job.description && (
+                              <p className="mt-2 text-sm text-gray-500 line-clamp-2">{job.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="text-gray-500 mb-4">You haven't saved any jobs yet</p>
+                    <Link to="/jobs" className="btn-primary">
+                      Browse Jobs
                     </Link>
                   </div>
                 )}

@@ -11,6 +11,7 @@ const RecruiterJobs = () => {
   const [showPostModal, setShowPostModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobApplications, setJobApplications] = useState([]);
+  const [selectedApplicantId, setSelectedApplicantId] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -151,6 +152,19 @@ const RecruiterJobs = () => {
       );
     } catch (error) {
       toast.error('Failed to update status');
+    }
+  };
+
+  const deleteApplication = async (appId) => {
+    if (!window.confirm('Are you sure you want to delete this application?')) return;
+
+    try {
+      await applicationsAPI.deleteApplication(appId);
+      setJobApplications(prev => prev.filter(app => app.id !== appId));
+      setSelectedApplicantId(null);
+      toast.success('Application deleted');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete application');
     }
   };
 
@@ -452,7 +466,7 @@ const RecruiterJobs = () => {
           <div className="modal-card max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">Applications</h2>
-              <button onClick={() => setJobApplications([])} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => { setJobApplications([]); setSelectedApplicantId(null); }} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -464,7 +478,14 @@ const RecruiterJobs = () => {
                   <div key={app.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="font-medium text-gray-900">{app.applicant?.name || 'Applicant'}</h3>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedApplicantId(selectedApplicantId === app.id ? null : app.id)}
+                          aria-expanded={selectedApplicantId === app.id}
+                          className="font-medium text-gray-900 hover:text-primary-600"
+                        >
+                          {app.applicant?.name || 'Applicant'}
+                        </button>
                         <p className="text-sm text-gray-500">{app.applicant?.email}</p>
                       </div>
                       <span className={`badge ${getStatusColor(app.status)}`}>{app.status}</span>
@@ -486,7 +507,59 @@ const RecruiterJobs = () => {
                         <option value="accepted">Accepted</option>
                         <option value="rejected">Rejected</option>
                       </select>
+                      <button
+                        type="button"
+                        onClick={() => deleteApplication(app.id)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Delete
+                      </button>
                     </div>
+                    {selectedApplicantId === app.id && (
+                      <div className="mt-4 p-4 bg-white/20 rounded-lg border border-white/40 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        {[
+                          ['Full name', app.applicant?.full_name || app.applicant?.name],
+                          ['Email', app.applicant?.email],
+                          ['Phone', app.applicant?.phone],
+                          ['Location', app.applicant?.location],
+                          ['Skills', Array.isArray(app.applicant?.skills) ? app.applicant.skills.join(', ') : app.applicant?.skills],
+                          ['Experience', app.applicant?.experience],
+                          ['Education', app.applicant?.education],
+                        ].map(([label, value]) => value && (
+                          <div key={label}>
+                            <p className="text-gray-500">{label}</p>
+                            <p className="text-gray-800 whitespace-pre-wrap break-words">{value}</p>
+                          </div>
+                        ))}
+                        {app.applicant?.bio && (
+                          <div className="sm:col-span-2">
+                            <p className="text-gray-500">About</p>
+                            <p className="text-gray-800 whitespace-pre-wrap">{app.applicant.bio}</p>
+                          </div>
+                        )}
+                        {(app.resume_url || app.applicant?.resume_url) && (
+                          <a
+                            href={app.resume_url || app.applicant.resume_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-600 hover:text-primary-700"
+                          >
+                            View applicant resume
+                          </a>
+                        )}
+                        {['linkedin_url', 'twitter_url', 'facebook_url'].map((field) => app.applicant?.[field] && (
+                          <a
+                            key={field}
+                            href={app.applicant[field]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-600 hover:text-primary-700"
+                          >
+                            {field.replace('_url', '').replace('_', ' ')}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
