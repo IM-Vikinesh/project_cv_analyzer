@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { jobsAPI, applicationsAPI } from '../services/api';
+import { jobsAPI, applicationsAPI, aiAPI } from '../services/api';
 import { formatJobSalary, getCompanyName } from '../utils/jobFormat';
 import toast from 'react-hot-toast';
 
@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [favoriteJobs, setFavoriteJobs] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [matchCount, setMatchCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +46,9 @@ const Dashboard = () => {
       }
 
       if (recRes?.data) {
-        setRecommendations(recRes.data.recommendations?.slice(0, 3) || []);
+        const allRecs = recRes.data.recommendations || [];
+        setRecommendations(allRecs.slice(0, 3));
+        setMatchCount(allRecs.length);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -57,10 +60,25 @@ const Dashboard = () => {
 
   const getRecommendations = async () => {
     try {
-      return await jobsAPI.getJobs({ per_page: 3 });
+      return await aiAPI.getRecommendations();
     } catch (error) {
       console.error('Error getting recommendations:', error);
-      return null;
+      try {
+        const fallback = await jobsAPI.getJobs({ per_page: 10 });
+        const jobs = fallback.data?.jobs || [];
+        return {
+          data: {
+            recommendations: jobs.map((job) => ({
+              job,
+              match_score: 60,
+              matched_skills: [],
+            })),
+          },
+        };
+      } catch (fallbackError) {
+        console.error('Error getting fallback recommendations:', fallbackError);
+        return null;
+      }
     }
   };
 
@@ -142,7 +160,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Job Matches</p>
-                <p className="text-2xl font-bold text-gray-900">{recommendations.length}+</p>
+                <p className="text-2xl font-bold text-gray-900">{matchCount}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
