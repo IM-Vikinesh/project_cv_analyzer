@@ -506,3 +506,4 @@ Use `GET /api/health` for a quick backend smoke test after any deployment or con
 ## License
 
 This software contains copyrighted material and is licensed for authorized use only. Any commercial use requires prior written permission or a valid commercial license.
+for experience the live version go to "https://job-nex-ai.vercel.app/"
