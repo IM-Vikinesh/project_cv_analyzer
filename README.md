@@ -505,4 +505,4 @@ Use `GET /api/health` for a quick backend smoke test after any deployment or con
 
 ## License
 
-Not specified in the repository. Contact the repository owner for reuse permissions.
+It's a copyright content to use for commercial purposes
